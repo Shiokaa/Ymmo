@@ -1,0 +1,64 @@
+package com.ymmo.entities;
+
+import java.security.Timestamp;
+import java.time.Instant;
+import java.util.UUID;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+
+import com.ymmo.utils.Property_types;
+
+import jakarta.annotation.Nullable;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.validation.constraints.NotNull;
+
+@Entity
+public class Properties {
+    // Génération d'un UUID automatiquement
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "agency_uuid")
+    @NotNull
+    private Agencies agency;
+
+    @NotNull
+    private String title;
+    @NotNull
+    private String description;
+    @NotNull
+    private Property_types type;
+    @NotNull
+    private String address;
+    @NotNull
+    private String city;
+    @NotNull
+    private int postal_code;
+    @NotNull
+    private float price;
+    @NotNull
+    private int size;
+    @NotNull
+    private int rooms_count;
+    @NotNull
+    @Value("true")
+    private boolean is_available;
+
+    @CreatedDate
+    @NotNull
+    private Instant created_at;
+    @LastModifiedDate
+    @NotNull
+    private Instant updated_at;
+    @Nullable
+    private Timestamp deleted_at;
+}
