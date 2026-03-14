@@ -36,7 +36,7 @@ public class Agency {
     @NotNull
     private String city;
     @NotNull
-    private int postal_code;
+    private int postalCode;
     @NotNull
     private int phone;
     @NotNull
