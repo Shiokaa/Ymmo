@@ -4,13 +4,13 @@ import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
 import com.ymmo.enums.PropertyType;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -52,7 +52,7 @@ public class Property {
     @NotNull
     private int roomsCount;
     @NotNull
-    @Value("true")
+    @Column(columnDefinition = "boolean default true")
     private boolean isAvailable;
 
     @CreatedDate
