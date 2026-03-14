@@ -26,7 +26,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "users")
@@ -34,7 +33,6 @@ import lombok.ToString;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 public class User {
 
     // Génération d'un UUID automatiquement
@@ -48,14 +46,15 @@ public class User {
     @NotNull
     private String lastName;
     @NotNull
+    @Column(unique = true)
     private String email;
     @NotNull
     private String passwordHash;
     @NotNull
     private String phone;
     @NotNull
-    @Enumerated(EnumType.ORDINAL)
-    @Column(columnDefinition = "smallint DEFAULT 0")
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) DEFAULT 'USER'")
     private UserRole role = UserRole.USER;
 
     @CreatedDate

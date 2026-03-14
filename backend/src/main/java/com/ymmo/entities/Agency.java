@@ -11,8 +11,11 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.ymmo.enums.AgencyStatus;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,7 +24,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "agencies")
@@ -29,7 +31,6 @@ import lombok.ToString;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 public class Agency {
     // Génération d'un UUID automatiquement
     @Id
@@ -47,12 +48,14 @@ public class Agency {
     @NotNull
     private String city;
     @NotNull
-    private int postalCode;
+    private String postalCode;
     @NotNull
-    private int phone;
+    private String phone;
     @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) DEFAULT 'OPEN'")
     private AgencyStatus status = AgencyStatus.OPEN;
-
+    
     @CreatedDate
     @NotNull
     private Instant createdAt;

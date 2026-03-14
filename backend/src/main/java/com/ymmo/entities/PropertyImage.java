@@ -21,7 +21,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "property_images")
@@ -29,12 +28,16 @@ import lombok.ToString;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 public class PropertyImage {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne
+    @JoinColumn(name = "property_uuid")
+    @NotNull
+    private Property property;
 
     @NotNull
     private String imageUrl;
@@ -42,11 +45,6 @@ public class PropertyImage {
     private String description;
     @NotNull
     private Boolean isCover;
-
-    @ManyToOne
-    @JoinColumn(name = "property_uuid")
-    @NotNull
-    private Property property;
 
     @CreatedDate
     @NotNull

@@ -1,5 +1,6 @@
 package com.ymmo.entities;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
@@ -14,6 +15,8 @@ import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -24,7 +27,6 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import lombok.ToString;
 
 @Entity
 @Table(name = "properties")
@@ -32,7 +34,6 @@ import lombok.ToString;
 @Setter
 @Getter
 @NoArgsConstructor
-@ToString
 public class Property {
     // Génération d'un UUID automatiquement
     @Id
@@ -49,22 +50,24 @@ public class Property {
     @NotNull
     private String description;
     @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) DEFAULT 'HOUSE'")
     private PropertyType type = PropertyType.HOUSE;
     @NotNull
     private String address;
     @NotNull
     private String city;
     @NotNull
-    private int postalCode;
+    private String postalCode;
     @NotNull
-    private float price;
+    private BigDecimal price;
     @NotNull
     private int size;
     @NotNull
     private int roomsCount;
     @NotNull
     @Column(columnDefinition = "boolean DEFAULT true")
-    private boolean isAvailable;
+    private boolean available;
 
     @CreatedDate
     @NotNull
