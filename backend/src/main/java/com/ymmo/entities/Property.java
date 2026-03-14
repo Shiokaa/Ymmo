@@ -1,6 +1,6 @@
 package com.ymmo.entities;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.ymmo.enums.Property_Type;
+import com.ymmo.enums.PropertyType;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
@@ -17,9 +17,11 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
+@Table(name = "properties")
 public class Property {
     // Génération d'un UUID automatiquement
     @Id
@@ -36,7 +38,7 @@ public class Property {
     @NotNull
     private String description;
     @NotNull
-    private Property_Type type;
+    private PropertyType type;
     @NotNull
     private String address;
     @NotNull

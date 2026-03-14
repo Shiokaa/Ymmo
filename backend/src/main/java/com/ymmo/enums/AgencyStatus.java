@@ -1,5 +1,5 @@
 package com.ymmo.enums;
 
-public enum Agency_Status {
+public enum AgencyStatus {
     OPEN, CLOSED, PLANNED, TEMPORILY_CLOSED
 }

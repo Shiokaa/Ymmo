@@ -1,6 +1,6 @@
 package com.ymmo.entities;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -14,24 +14,28 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Staff_Agency {
+@Table(name = "property_images")
+public class PropertyImage {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @ManyToOne
-    @JoinColumn(name = "user_uuid")
     @NotNull
-    private User user;
+    private String image_url;
+    @NotNull
+    private String description;
+    @NotNull
+    private Boolean is_cover;
 
     @ManyToOne
-    @JoinColumn(name = "agency_uuid")
+    @JoinColumn(name = "property_uuid")
     @NotNull
-    private Agency agency;
+    private Property property;
 
     @CreatedDate
     @NotNull

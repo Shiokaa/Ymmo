@@ -1,5 +1,5 @@
 package com.ymmo.enums;
 
-public enum User_Role {
+public enum UserRole {
     USER, STAFF, ADMIN
 }
