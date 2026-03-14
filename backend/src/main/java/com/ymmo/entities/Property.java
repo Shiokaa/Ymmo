@@ -6,12 +6,14 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import com.ymmo.enums.PropertyType;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -19,9 +21,18 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "properties")
+@EntityListeners(AuditingEntityListener.class)
+@Setter
+@Getter
+@NoArgsConstructor
+@ToString
 public class Property {
     // Génération d'un UUID automatiquement
     @Id
@@ -38,7 +49,7 @@ public class Property {
     @NotNull
     private String description;
     @NotNull
-    private PropertyType type;
+    private PropertyType type = PropertyType.HOUSE;
     @NotNull
     private String address;
     @NotNull
@@ -52,7 +63,7 @@ public class Property {
     @NotNull
     private int roomsCount;
     @NotNull
-    @Column(columnDefinition = "boolean default true")
+    @Column(columnDefinition = "boolean DEFAULT true")
     private boolean isAvailable;
 
     @CreatedDate

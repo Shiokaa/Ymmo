@@ -6,24 +6,41 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import jakarta.persistence.EntityListeners;
 
 import com.ymmo.enums.UserRole;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 @Entity
 @Table(name = "users")
+@EntityListeners(AuditingEntityListener.class)
+@Setter
+@Getter
+@NoArgsConstructor
+@ToString
 public class User {
 
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
+    @Setter(AccessLevel.NONE)
     private UUID uuid;
 
     @NotNull
@@ -35,9 +52,11 @@ public class User {
     @NotNull
     private String passwordHash;
     @NotNull
-    private int phone;
+    private String phone;
     @NotNull
-    private UserRole role;
+    @Enumerated(EnumType.ORDINAL)
+    @Column(columnDefinition = "smallint DEFAULT 0")
+    private UserRole role = UserRole.USER;
 
     @CreatedDate
     @NotNull
