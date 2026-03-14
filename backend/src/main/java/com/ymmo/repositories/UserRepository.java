@@ -4,8 +4,8 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import com.ymmo.entities.Users;
+import com.ymmo.entities.User;
 
-public interface UsersRepository extends JpaRepository<Users, UUID> {
+public interface UserRepository extends JpaRepository<User, UUID> {
 
 }

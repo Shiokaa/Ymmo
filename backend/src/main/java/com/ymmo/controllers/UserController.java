@@ -5,24 +5,24 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-import com.ymmo.entities.Users;
-import com.ymmo.services.UsersService;
+import com.ymmo.entities.User;
+import com.ymmo.services.UserService;
 
 
 @Controller
-public class UsersController {
-    
+public class UserController {
+
     @Autowired
-    private UsersService usersService;
+    private UserService userService;
 
     @PostMapping("/register")
-    public String register(@RequestBody Users user) {
+    public String register(@RequestBody User user) {
 
-        usersService.create(user);
+        userService.create(user);
 
         String str = "Utilisateur créé !" + user;
         return str;
     }
-    
+
 
 }

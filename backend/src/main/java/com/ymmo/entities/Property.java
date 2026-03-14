@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.ymmo.enums.Property_types;
+import com.ymmo.enums.Property_Type;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Properties {
+public class Property {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -29,14 +29,14 @@ public class Properties {
     @ManyToOne
     @JoinColumn(name = "agency_uuid")
     @NotNull
-    private Agencies agency;
+    private Agency agency;
 
     @NotNull
     private String title;
     @NotNull
     private String description;
     @NotNull
-    private Property_types type;
+    private Property_Type type;
     @NotNull
     private String address;
     @NotNull

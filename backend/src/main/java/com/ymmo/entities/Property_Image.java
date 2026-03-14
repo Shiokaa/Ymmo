@@ -17,7 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-public class Property_Images {
+public class Property_Image {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -33,7 +33,7 @@ public class Property_Images {
     @ManyToOne
     @JoinColumn(name = "property_uuid")
     @NotNull
-    private Properties property;
+    private Property property;
 
     @CreatedDate
     @NotNull

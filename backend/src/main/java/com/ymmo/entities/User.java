@@ -6,35 +6,36 @@ import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import com.ymmo.enums.User_Role;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityListeners;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotNull;
 
 @Entity
-@EntityListeners(AuditingEntityListener.class)
-public class Staff_Agencies {
+public class User {
+
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
+    private UUID uuid;
 
-    @ManyToOne
-    @JoinColumn(name = "user_uuid")
     @NotNull
-    private Users user;
-
-    @ManyToOne
-    @JoinColumn(name = "agency_uuid")
+    private String first_name;
     @NotNull
-    private Agencies agency;
+    private String last_name;
+    @NotNull
+    private String email;
+    @NotNull
+    private String password_hash;
+    @NotNull
+    private int phone;
+    @NotNull
+    private User_Role role;
 
     @CreatedDate
     @NotNull

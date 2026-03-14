@@ -3,16 +3,16 @@ package com.ymmo.services;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import com.ymmo.entities.Users;
-import com.ymmo.repositories.UsersRepository;
+import com.ymmo.entities.User;
+import com.ymmo.repositories.UserRepository;
 
 @Component
-public class UsersService {
-    
-    @Autowired
-    private UsersRepository repositories;
+public class UserService {
 
-    public void create(Users user) {
+    @Autowired
+    private UserRepository repositories;
+
+    public void create(User user) {
 
         repositories.save(user);
     }
