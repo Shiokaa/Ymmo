@@ -26,11 +26,11 @@ public class PropertyImage {
     private UUID id;
 
     @NotNull
-    private String image_url;
+    private String imageUrl;
     @NotNull
     private String description;
     @NotNull
-    private Boolean is_cover;
+    private Boolean isCover;
 
     @ManyToOne
     @JoinColumn(name = "property_uuid")
@@ -39,10 +39,10 @@ public class PropertyImage {
 
     @CreatedDate
     @NotNull
-    private Instant created_at;
+    private Instant createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updated_at;
+    private Instant updatedAt;
     @Nullable
-    private Timestamp deleted_at;
+    private Timestamp deletedAt;
 }

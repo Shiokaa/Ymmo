@@ -44,10 +44,10 @@ public class Agency {
 
     @CreatedDate
     @NotNull
-    private Instant created_at;
+    private Instant createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updated_at;
+    private Instant updatedAt;
     @Nullable
-    private Timestamp deleted_at;
+    private Timestamp deletedAt;
 }

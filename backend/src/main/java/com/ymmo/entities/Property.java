@@ -44,23 +44,23 @@ public class Property {
     @NotNull
     private String city;
     @NotNull
-    private int postal_code;
+    private int postalCode;
     @NotNull
     private float price;
     @NotNull
     private int size;
     @NotNull
-    private int rooms_count;
+    private int roomsCount;
     @NotNull
     @Value("true")
-    private boolean is_available;
+    private boolean isAvailable;
 
     @CreatedDate
     @NotNull
-    private Instant created_at;
+    private Instant createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updated_at;
+    private Instant updatedAt;
     @Nullable
-    private Timestamp deleted_at;
+    private Timestamp deletedAt;
 }
