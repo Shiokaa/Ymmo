@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
-import com.ymmo.utils.Property_types;
+import com.ymmo.enums.Property_types;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Entity;
