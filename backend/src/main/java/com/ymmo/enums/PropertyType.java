@@ -1,5 +1,5 @@
-package com.ymmo.utils;
+package com.ymmo.enums;
 
-public enum Property_types {
+public enum PropertyType {
     HOUSE, APARTMENT, LAND, PARKING, BUILDING, OFFICE, RETAIL_SPACE, WAREHOUSE, BUSINESS_ASSETS
 }

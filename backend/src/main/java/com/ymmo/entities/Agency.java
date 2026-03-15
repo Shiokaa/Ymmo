@@ -1,6 +1,6 @@
 package com.ymmo.entities;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -8,44 +8,60 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import com.ymmo.utils.User_Roles;
+import com.ymmo.enums.AgencyStatus;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
+@Table(name = "agencies")
 @EntityListeners(AuditingEntityListener.class)
-public class Users {
-
+@Setter
+@Getter
+@NoArgsConstructor
+public class Agency {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID uuid;
+    private UUID id;
 
     @NotNull
-    private String first_name;
+    private String name;
     @NotNull
-    private String last_name;
+    private String description;
     @NotNull
     private String email;
     @NotNull
-    private String password_hash;
+    private String address;
     @NotNull
-    private int phone;
+    private String city;
     @NotNull
-    private User_Roles role;
-
+    private String postalCode;
+    @NotNull
+    private String phone;
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) DEFAULT 'OPEN'")
+    private AgencyStatus status = AgencyStatus.OPEN;
+    
     @CreatedDate
     @NotNull
-    private Instant created_at;
+    private Instant createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updated_at;
+    private Instant updatedAt;
     @Nullable
-    private Timestamp deleted_at;
+    private Timestamp deletedAt;
 }
