@@ -18,7 +18,11 @@ Module backend de la plateforme Ymmo, fournissant l'API métier qui gère l'int�
 
 ### Étapes d'installation
 
-<!-- Les étapes d'installation -->
+Créer la base de données via Docker :
+
+```bash
+docker-compose -f dc-postgresql.yml up -d
+```
 
 ### Lancer le serveur de développement
 
