@@ -2,17 +2,17 @@ package com.ymmo.controllers;
 
 import java.util.List;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ymmo.dto.agency.AgencyResponseDTO;
+import com.ymmo.dtos.agency.AgencyResponse;
+import com.ymmo.response.GlobalResponse;
 import com.ymmo.services.AgencyService;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @RestController
-@RequestMapping("/api")
 public class AgencyController {
 
     private AgencyService agencyService;
@@ -22,7 +22,7 @@ public class AgencyController {
     }
 
     @GetMapping("/agencies")
-    public ResponseEntity<List<AgencyResponseDTO>> getAll() {
-        return agencyService.listAll();
+    public ResponseEntity<GlobalResponse<List<AgencyResponse>>> getAll() {
+        return new ResponseEntity<>(GlobalResponse.success(agencyService.listAll()), HttpStatus.OK);
     }
 }
