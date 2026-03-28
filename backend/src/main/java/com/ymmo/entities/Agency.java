@@ -22,6 +22,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -32,6 +34,8 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Agency {
     // Génération d'un UUID automatiquement
     @Id
@@ -57,7 +61,7 @@ public class Agency {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(50) DEFAULT 'OPEN'")
-    private AgencyStatus status = AgencyStatus.OPEN;
+    private static final AgencyStatus status = AgencyStatus.OPEN;
 
     @CreatedDate
     @NotNull

@@ -3,11 +3,9 @@ package com.ymmo.services;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.ymmo.dto.agency.AgencyResponseDTO;
+import com.ymmo.dtos.agency.AgencyResponse;
 import com.ymmo.entities.Agency;
 import com.ymmo.repositories.AgencyRepository;
 
@@ -20,30 +18,24 @@ public class AgencyService {
         this.agencyRepository = agencyRepository;
     }
 
-    public ResponseEntity<List<AgencyResponseDTO>> listAll() {
+    public List<AgencyResponse> listAll() {
         List<Agency> agencies = agencyRepository.findAll();
 
-        if (agencies.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-
-        List<AgencyResponseDTO> agencyResponseDTOs = new ArrayList<>();
-
+        List<AgencyResponse> agenciesResponse = new ArrayList<>();
         for (Agency agency : agencies) {
-            AgencyResponseDTO agencyResponseDTO = new AgencyResponseDTO();
+            AgencyResponse agencyResponse = AgencyResponse.builder()
+                    .name(agency.getName())
+                    .description(agency.getDescription())
+                    .email(agency.getEmail())
+                    .address(agency.getAddress())
+                    .city(agency.getCity())
+                    .postalCode(agency.getPostalCode())
+                    .phone(agency.getPhone())
+                    .build();
 
-            agencyResponseDTO.setId(agency.getId());
-            agencyResponseDTO.setName(agency.getName());
-            agencyResponseDTO.setDescription(agency.getDescription());
-            agencyResponseDTO.setEmail(agency.getEmail());
-            agencyResponseDTO.setAddress(agency.getAddress());
-            agencyResponseDTO.setCity(agency.getCity());
-            agencyResponseDTO.setPostalCode(agency.getPostalCode());
-            agencyResponseDTO.setPhone(agency.getPhone());
-
-            agencyResponseDTOs.add(agencyResponseDTO);
+            agenciesResponse.add(agencyResponse);
         }
 
-        return new ResponseEntity<>(agencyResponseDTOs, HttpStatus.OK);
+        return agenciesResponse;
     }
 }
