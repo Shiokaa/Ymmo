@@ -11,6 +11,7 @@ import com.ymmo.dtos.authentication.LoginResponse;
 import com.ymmo.dtos.authentication.LoginUserDto;
 import com.ymmo.dtos.authentication.RegisterUserDto;
 import com.ymmo.entities.User;
+import com.ymmo.response.GlobalResponse;
 import com.ymmo.services.AuthenticationService;
 import com.ymmo.services.JwtService;
 
@@ -36,7 +37,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto loginUserDto) {
+    public ResponseEntity<GlobalResponse<LoginResponse>> login(@RequestBody @Valid LoginUserDto loginUserDto) {
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
@@ -44,6 +45,6 @@ public class AuthenticationController {
         LoginResponse loginResponse = new LoginResponse().setToken(jwtToken)
                 .setExpiresIn(jwtService.getExpirationTime());
 
-        return new ResponseEntity<>(loginResponse, HttpStatus.OK);
+        return new ResponseEntity<>(GlobalResponse.success(loginResponse), HttpStatus.OK);
     }
 }
