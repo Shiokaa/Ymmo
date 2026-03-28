@@ -3,7 +3,7 @@ package com.ymmo.services;
 import com.ymmo.dtos.authentication.LoginUserDto;
 import com.ymmo.dtos.authentication.RegisterUserDto;
 import com.ymmo.entities.User;
-import com.ymmo.exception.EmailAlreadyExistsException;
+import com.ymmo.exceptions.EmailAlreadyExistsException;
 import com.ymmo.repositories.UserRepository;
 
 import org.springframework.dao.DataIntegrityViolationException;
