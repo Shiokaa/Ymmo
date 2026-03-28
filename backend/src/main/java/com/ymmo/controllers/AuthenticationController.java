@@ -1,5 +1,6 @@
 package com.ymmo.controllers;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,8 @@ import com.ymmo.dtos.authentication.RegisterUserDto;
 import com.ymmo.entities.User;
 import com.ymmo.services.AuthenticationService;
 import com.ymmo.services.JwtService;
+
+import jakarta.validation.Valid;
 
 @RequestMapping("/auth")
 @RestController
@@ -26,14 +29,14 @@ public class AuthenticationController {
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<User> register(@RequestBody RegisterUserDto registerUserDto) {
-        User registeredUser = authenticationService.signup(registerUserDto);
+    public ResponseEntity<HttpStatus> register(@RequestBody @Valid RegisterUserDto registerUserDto) {
+        authenticationService.signup(registerUserDto);
 
-        return ResponseEntity.ok(registeredUser);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody LoginUserDto loginUserDto) {
+    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginUserDto loginUserDto) {
         User authenticatedUser = authenticationService.authenticate(loginUserDto);
 
         String jwtToken = jwtService.generateToken(authenticatedUser);
@@ -41,6 +44,6 @@ public class AuthenticationController {
         LoginResponse loginResponse = new LoginResponse().setToken(jwtToken)
                 .setExpiresIn(jwtService.getExpirationTime());
 
-        return ResponseEntity.ok(loginResponse);
+        return new ResponseEntity<>(loginResponse, HttpStatus.OK);
     }
 }
