@@ -1,4 +1,4 @@
-package com.ymmo.dto.agency;
+package com.ymmo.dtos.agency;
 
 import java.util.UUID;
 
@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class AgencyResponseDTO {
+public class AgencyResponse {
     private UUID id;
     private String name;
     private String description;
