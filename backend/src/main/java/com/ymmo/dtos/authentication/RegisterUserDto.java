@@ -1,4 +1,4 @@
-package com.ymmo.dto.user;
+package com.ymmo.dtos.authentication;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class UserRequestDTO {
+public class RegisterUserDto {
     @NotBlank
     private String firstName;
     @NotBlank
