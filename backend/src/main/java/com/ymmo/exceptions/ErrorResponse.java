@@ -1,4 +1,4 @@
-package com.ymmo.exception;
+package com.ymmo.exceptions;
 
 import lombok.Getter;
 import lombok.Setter;

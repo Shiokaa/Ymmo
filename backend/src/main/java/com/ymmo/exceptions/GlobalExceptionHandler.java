@@ -1,4 +1,4 @@
-package com.ymmo.exception;
+package com.ymmo.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
