@@ -17,6 +17,7 @@ import com.ymmo.services.AuthenticationService;
 import com.ymmo.services.JwtService;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
@@ -34,11 +35,11 @@ public class AuthenticationController {
         this.authenticationService = authenticationService;
     }
 
-    @PostMapping("/signup")
-    public ResponseEntity<HttpStatus> register(@RequestBody @Valid RegisterUserDto registerUserDto) {
-        authenticationService.signup(registerUserDto);
+    @PostMapping("/register")
+    public ResponseEntity<GlobalResponse<HttpStatus>> register(@RequestBody @Valid RegisterUserDto registerUserDto) {
+        authenticationService.create(registerUserDto);
 
-        return new ResponseEntity<>(HttpStatus.CREATED);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.CREATED);
     }
 
     @PostMapping("/login")
@@ -55,10 +56,30 @@ public class AuthenticationController {
         cookie.setHttpOnly(true);
         cookie.setSecure(false); // Mettre en true en production
         cookie.setPath("/");
-        cookie.setMaxAge(jwtExpiration / 1000); // jwtExpiration est en ms, division par 1000 pour le transformer en seconde
+        cookie.setMaxAge(jwtExpiration / 1000); // jwtExpiration est en ms, division par 1000 pour le transformer en
+                                                // seconde
 
         response.addCookie(cookie);
 
         return new ResponseEntity<>(GlobalResponse.success(loginResponse), HttpStatus.OK);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<HttpStatus> logout(HttpServletRequest request, HttpServletResponse response) {
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("jwt".equals(cookie.getName())) {
+                    Cookie expiredCookie = new Cookie("jwt", null);
+                    expiredCookie.setHttpOnly(true);
+                    expiredCookie.setSecure(false);
+                    expiredCookie.setPath("/");
+                    expiredCookie.setMaxAge(0);
+                    response.addCookie(expiredCookie);
+                }
+            }
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }
