@@ -65,7 +65,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/logout")
-    public ResponseEntity<HttpStatus> logout(HttpServletRequest request, HttpServletResponse response) {
+    public ResponseEntity<GlobalResponse<HttpStatus>> logout(HttpServletRequest request, HttpServletResponse response) {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
@@ -80,6 +80,6 @@ public class AuthenticationController {
             }
         }
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
 }
