@@ -29,7 +29,7 @@ public class AuthenticationService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public User signup(RegisterUserDto input) {
+    public User create(RegisterUserDto input) {
         User user = User.builder()
                 .firstName(input.getFirstName())
                 .lastName(input.getLastName())
@@ -39,12 +39,10 @@ public class AuthenticationService {
                 .build();
 
         try {
-            userRepository.findByEmail(user.getEmail());
+            return userRepository.save(user);
         } catch (DataIntegrityViolationException e) {
             throw new EmailAlreadyExistsException();
         }
-
-        return userRepository.save(user);
     }
 
     public User authenticate(LoginUserDto input) {

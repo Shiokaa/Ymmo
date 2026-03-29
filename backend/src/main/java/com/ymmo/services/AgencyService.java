@@ -12,7 +12,7 @@ import com.ymmo.repositories.AgencyRepository;
 @Service
 public class AgencyService {
 
-    private AgencyRepository agencyRepository;
+    private final AgencyRepository agencyRepository;
 
     public AgencyService(AgencyRepository agencyRepository) {
         this.agencyRepository = agencyRepository;
