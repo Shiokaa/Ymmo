@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RestController
 public class AgencyController {
 
-    private AgencyService agencyService;
+    private final AgencyService agencyService;
 
     public AgencyController(AgencyService agencyService) {
         this.agencyService = agencyService;
