@@ -63,7 +63,8 @@ public class User implements UserDetails {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(50) DEFAULT 'USER'")
-    private static final UserRole role = UserRole.USER;
+    @Builder.Default
+    private UserRole role = UserRole.USER;
 
     @CreatedDate
     @NotNull

@@ -61,7 +61,8 @@ public class Agency {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(50) DEFAULT 'OPEN'")
-    private static final AgencyStatus status = AgencyStatus.OPEN;
+    @Builder.Default
+    private AgencyStatus status = AgencyStatus.OPEN;
 
     @CreatedDate
     @NotNull
