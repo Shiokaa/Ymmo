@@ -4,13 +4,18 @@ import java.util.List;
 
 import org.springframework.web.bind.annotation.RestController;
 
-import com.ymmo.dtos.agency.AgencyResponse;
+import com.ymmo.dtos.agency.AgencyRequestDto;
+import com.ymmo.dtos.agency.AgencyResponseDto;
 import com.ymmo.response.GlobalResponse;
 import com.ymmo.services.AgencyService;
+
+import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @RestController
 public class AgencyController {
@@ -22,7 +27,14 @@ public class AgencyController {
     }
 
     @GetMapping("/agencies")
-    public ResponseEntity<GlobalResponse<List<AgencyResponse>>> getAll() {
+    public ResponseEntity<GlobalResponse<List<AgencyResponseDto>>> getAll() {
         return new ResponseEntity<>(GlobalResponse.success(agencyService.listAll()), HttpStatus.OK);
+    }
+
+    @PostMapping("/agencies/create")
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> add(@RequestBody @Valid AgencyRequestDto agencyRequestDto) {
+        AgencyResponseDto agencyResponseDto = agencyService.create(agencyRequestDto);
+
+        return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.CREATED);
     }
 }
