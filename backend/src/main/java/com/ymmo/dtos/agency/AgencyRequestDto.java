@@ -1,5 +1,7 @@
 package com.ymmo.dtos.agency;
 
+import com.ymmo.enums.AgencyStatus;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
@@ -23,4 +25,6 @@ public class AgencyRequestDto {
     private String postalCode;
     @NotBlank
     private String phone;
+
+    private AgencyStatus status;
 }
