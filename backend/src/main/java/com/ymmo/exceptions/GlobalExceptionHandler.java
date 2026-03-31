@@ -20,8 +20,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(AgencyNotFoundException.class)
-    public ResponseEntity<GlobalResponse<HttpStatus>> handleAgencyNotFound(AgencyNotFoundException ex) {
+    @ExceptionHandler(ResourceNotFound.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleAgencyNotFound(ResourceNotFound ex) {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 }
