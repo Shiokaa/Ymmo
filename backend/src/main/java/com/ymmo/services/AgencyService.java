@@ -46,6 +46,23 @@ public class AgencyService {
         return agenciesResponse;
     }
 
+    public AgencyResponseDto getAgencyById(String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        Agency agency = agencyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        return AgencyResponseDto.builder()
+                .id(agency.getId())
+                .name(agency.getName())
+                .description(agency.getDescription())
+                .email(agency.getEmail())
+                .address(agency.getAddress())
+                .city(agency.getCity())
+                .postalCode(agency.getPostalCode())
+                .phone(agency.getPhone())
+                .status(agency.getStatus()).build();
+    }
+
     public AgencyResponseDto createAgency(AgencyRequestDto input) {
         Agency agency = Agency.builder()
                 .name(input.getName())

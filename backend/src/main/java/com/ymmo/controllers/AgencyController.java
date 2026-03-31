@@ -34,6 +34,11 @@ public class AgencyController {
         return new ResponseEntity<>(GlobalResponse.success(agencyService.getAllAgencies()), HttpStatus.OK);
     }
 
+    @GetMapping("/agencies/{id}")
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> getMethodName(@PathVariable String id) {
+        return new ResponseEntity<>(GlobalResponse.success(agencyService.getAgencyById(id)), HttpStatus.OK);
+    }
+
     @PostMapping("/agency")
     public ResponseEntity<GlobalResponse<AgencyResponseDto>> createAgency(
             @RequestBody @Valid AgencyRequestDto agencyRequestDto) {
