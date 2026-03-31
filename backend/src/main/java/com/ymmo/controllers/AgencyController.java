@@ -30,22 +30,22 @@ public class AgencyController {
     }
 
     @GetMapping("/agencies")
-    public ResponseEntity<GlobalResponse<List<AgencyResponseDto>>> getAll() {
-        return new ResponseEntity<>(GlobalResponse.success(agencyService.listAll()), HttpStatus.OK);
+    public ResponseEntity<GlobalResponse<List<AgencyResponseDto>>> getAllAgencies() {
+        return new ResponseEntity<>(GlobalResponse.success(agencyService.getAllAgencies()), HttpStatus.OK);
     }
 
-    @PostMapping("/agencies/create")
-    public ResponseEntity<GlobalResponse<AgencyResponseDto>> add(
+    @PostMapping("/agency")
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> createAgency(
             @RequestBody @Valid AgencyRequestDto agencyRequestDto) {
-        AgencyResponseDto agencyResponseDto = agencyService.create(agencyRequestDto);
+        AgencyResponseDto agencyResponseDto = agencyService.createAgency(agencyRequestDto);
 
         return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.CREATED);
     }
 
     @PutMapping("/agencies/{id}")
-    public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgency(@PathVariable String id,
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgencyById(@PathVariable String id,
             @RequestBody AgencyRequestDto agencyRequestDto) {
-        AgencyResponseDto agencyResponseDto = agencyService.updateAgency(agencyRequestDto, id);
+        AgencyResponseDto agencyResponseDto = agencyService.updateAgencyById(agencyRequestDto, id);
 
         return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.OK);
     }

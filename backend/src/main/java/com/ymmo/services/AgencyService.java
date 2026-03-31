@@ -25,7 +25,7 @@ public class AgencyService {
         this.agencyRepository = agencyRepository;
     }
 
-    public List<AgencyResponseDto> listAll() {
+    public List<AgencyResponseDto> getAllAgencies() {
         List<Agency> agencies = agencyRepository.findAll();
 
         List<AgencyResponseDto> agenciesResponse = new ArrayList<>();
@@ -46,7 +46,7 @@ public class AgencyService {
         return agenciesResponse;
     }
 
-    public AgencyResponseDto create(AgencyRequestDto input) {
+    public AgencyResponseDto createAgency(AgencyRequestDto input) {
         Agency agency = Agency.builder()
                 .name(input.getName())
                 .description(input.getDescription())
@@ -75,7 +75,7 @@ public class AgencyService {
                 .status(agency.getStatus()).build();
     }
 
-    public AgencyResponseDto updateAgency(AgencyRequestDto input, String id) {
+    public AgencyResponseDto updateAgencyById(AgencyRequestDto input, String id) {
         UUID uuid = ConvertType.stringToUuid(id);
 
         Optional<Agency> existingAgency = agencyRepository.findByEmail(input.getEmail());
