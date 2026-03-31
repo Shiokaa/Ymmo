@@ -11,7 +11,17 @@ import com.ymmo.response.GlobalResponse;
 public class GlobalExceptionHandler {
     
     @ExceptionHandler(EmailAlreadyExistsException.class)
-    public ResponseEntity<GlobalResponse<HttpStatus>> handleEmailExists(EmailAlreadyExistsException ex){
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleEmailExists(EmailAlreadyExistsException ex) {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(InvalidUuidException.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleInvalidUuid(InvalidUuidException ex) {
+        return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ResourceNotFound.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleAgencyNotFound(ResourceNotFound ex) {
+        return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.NOT_FOUND);
     }
 }

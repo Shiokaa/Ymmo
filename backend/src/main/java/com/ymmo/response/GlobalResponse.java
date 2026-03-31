@@ -3,12 +3,14 @@ package com.ymmo.response;
 import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
+@JsonPropertyOrder({ "success", "timestamp", "message", "data" })
 public class GlobalResponse<T> {
     private T data;
     private String message;
