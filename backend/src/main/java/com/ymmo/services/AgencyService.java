@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import com.ymmo.dtos.agency.AgencyRequestDto;
@@ -26,11 +27,12 @@ public class AgencyService {
     }
 
     public List<AgencyResponseDto> getAllAgencies() {
-        List<Agency> agencies = agencyRepository.findAll();
+        List<Agency> agencies = agencyRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
 
         List<AgencyResponseDto> agenciesResponse = new ArrayList<>();
         for (Agency agency : agencies) {
             AgencyResponseDto agencyResponse = AgencyResponseDto.builder()
+                    .id(agency.getId())
                     .name(agency.getName())
                     .description(agency.getDescription())
                     .email(agency.getEmail())
@@ -38,6 +40,7 @@ public class AgencyService {
                     .city(agency.getCity())
                     .postalCode(agency.getPostalCode())
                     .phone(agency.getPhone())
+                    .status(agency.getStatus())
                     .build();
 
             agenciesResponse.add(agencyResponse);
