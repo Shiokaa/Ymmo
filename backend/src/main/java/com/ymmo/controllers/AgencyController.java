@@ -35,7 +35,7 @@ public class AgencyController {
     }
 
     @GetMapping("/agencies/{id}")
-    public ResponseEntity<GlobalResponse<AgencyResponseDto>> getMethodName(@PathVariable String id) {
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> getAgencyById(@PathVariable String id) {
         return new ResponseEntity<>(GlobalResponse.success(agencyService.getAgencyById(id)), HttpStatus.OK);
     }
 
