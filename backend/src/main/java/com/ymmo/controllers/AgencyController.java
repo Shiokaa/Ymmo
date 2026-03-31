@@ -39,7 +39,7 @@ public class AgencyController {
         return new ResponseEntity<>(GlobalResponse.success(agencyService.getAgencyById(id)), HttpStatus.OK);
     }
 
-    @PostMapping("/agency")
+    @PostMapping("/agencies")
     public ResponseEntity<GlobalResponse<AgencyResponseDto>> createAgency(
             @RequestBody @Valid AgencyRequestDto agencyRequestDto) {
         AgencyResponseDto agencyResponseDto = agencyService.createAgency(agencyRequestDto);
