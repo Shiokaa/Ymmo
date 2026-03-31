@@ -11,10 +11,10 @@ import org.springframework.stereotype.Service;
 import com.ymmo.dtos.agency.AgencyRequestDto;
 import com.ymmo.dtos.agency.AgencyResponseDto;
 import com.ymmo.entities.Agency;
-import com.ymmo.exceptions.AgencyNotFoundException;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
-import com.ymmo.exceptions.InvalidUuidException;
+import com.ymmo.exceptions.ResourceNotFound;
 import com.ymmo.repositories.AgencyRepository;
+import com.ymmo.utils.ConvertType;
 
 @Service
 public class AgencyService {
@@ -76,12 +76,7 @@ public class AgencyService {
     }
 
     public AgencyResponseDto updateAgency(AgencyRequestDto input, String id) {
-        UUID uuid;
-        try {
-            uuid = UUID.fromString(id);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidUuidException();
-        }
+        UUID uuid = ConvertType.stringToUuid(id);
 
         Optional<Agency> existingAgency = agencyRepository.findByEmail(input.getEmail());
         if (existingAgency.isPresent() && !existingAgency.get().getId().equals(uuid)) {
@@ -89,7 +84,7 @@ public class AgencyService {
         }
 
         Agency agency = agencyRepository.findById(uuid)
-                .orElseThrow(AgencyNotFoundException::new);
+                .orElseThrow(ResourceNotFound::new);
 
         agency.setName(input.getName());
         agency.setDescription(input.getDescription());
@@ -112,5 +107,12 @@ public class AgencyService {
                 .postalCode(agency.getPostalCode())
                 .phone(agency.getPhone())
                 .status(agency.getStatus()).build();
+    }
+
+    public void deleteAgencyById(String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        agencyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+        agencyRepository.deleteById(uuid);
     }
 }

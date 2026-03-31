@@ -13,6 +13,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,11 +42,18 @@ public class AgencyController {
         return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.CREATED);
     }
 
-    @PutMapping("agencies/{id}")
+    @PutMapping("/agencies/{id}")
     public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgency(@PathVariable String id,
             @RequestBody AgencyRequestDto agencyRequestDto) {
         AgencyResponseDto agencyResponseDto = agencyService.updateAgency(agencyRequestDto, id);
 
         return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.OK);
+    }
+
+    @DeleteMapping("/agencies/{id}")
+    public ResponseEntity<GlobalResponse<HttpStatus>> deleteAgencyById(@PathVariable String id) {
+        agencyService.deleteAgencyById(id);
+
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
 }
