@@ -4,10 +4,12 @@ import com.ymmo.dtos.authentication.LoginUserDto;
 import com.ymmo.dtos.authentication.RegisterUserDto;
 import com.ymmo.entities.User;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
+import com.ymmo.exceptions.InvalidCredentialsException;
 import com.ymmo.repositories.UserRepository;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -46,12 +48,16 @@ public class AuthenticationService {
     }
 
     public User authenticate(LoginUserDto input) {
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        input.getEmail(),
-                        input.getPassword()));
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            input.getEmail(),
+                            input.getPassword()));
+        } catch (BadCredentialsException e) {
+            throw new InvalidCredentialsException();
+        }
 
         return userRepository.findByEmail(input.getEmail())
-                .orElseThrow();
+                .orElseThrow(InvalidCredentialsException::new);
     }
 }
