@@ -1,8 +1,9 @@
 package com.ymmo.dtos.user;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.ymmo.enums.UserRole;
 
@@ -22,6 +23,8 @@ public class UserResponseDto {
     private String email;
     private String phone;
     private UserRole role;
-    private Instant createdAt;
-    private Instant updatedAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime updatedAt;
 }

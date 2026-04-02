@@ -1,7 +1,6 @@
 package com.ymmo.entities;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
@@ -68,12 +67,12 @@ public class User implements UserDetails {
 
     @CreatedDate
     @NotNull
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
     @Nullable
-    private Timestamp deletedAt;
+    private LocalDateTime deletedAt;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
