@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ymmo.dtos.user.UserResponseDto;
+import com.ymmo.dtos.user.UserUpdatePasswordDto;
 import com.ymmo.dtos.user.UserUpdateProfilDto;
 import com.ymmo.response.GlobalResponse;
 import com.ymmo.services.UserService;
@@ -37,9 +38,16 @@ public class UserController {
     }
 
     @PutMapping("users/profile/{id}")
-    public ResponseEntity<GlobalResponse<UserResponseDto>> updateUserProfileById(@Valid @PathVariable String id,
-            @RequestBody UserUpdateProfilDto input) {
+    public ResponseEntity<GlobalResponse<UserResponseDto>> updateUserProfileById(@PathVariable String id,
+            @RequestBody @Valid UserUpdateProfilDto input) {
         UserResponseDto userResponseDto = userService.updateUserProfileById(id, input);
         return new ResponseEntity<>(GlobalResponse.success(userResponseDto), HttpStatus.OK);
+    }
+
+    @PutMapping("users/password/{id}")
+    public ResponseEntity<GlobalResponse<HttpStatus>> updateUserPasswordById(@PathVariable String id,
+            @RequestBody @Valid UserUpdatePasswordDto input) {
+        userService.updateUserPasswordById(id, input);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
 }

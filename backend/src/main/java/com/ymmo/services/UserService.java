@@ -6,12 +6,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.ymmo.dtos.user.UserResponseDto;
+import com.ymmo.dtos.user.UserUpdatePasswordDto;
 import com.ymmo.dtos.user.UserUpdateProfilDto;
 import com.ymmo.entities.User;
+import com.ymmo.exceptions.BadRequestException;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
+import com.ymmo.exceptions.InvalidCredentialsException;
 import com.ymmo.exceptions.ResourceNotFound;
 import com.ymmo.repositories.UserRepository;
 import com.ymmo.utils.ConvertType;
@@ -20,8 +24,11 @@ import com.ymmo.utils.ConvertType;
 public class UserService {
     private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository) {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public List<UserResponseDto> getAllUsers() {
@@ -87,5 +94,27 @@ public class UserService {
                 .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt()).build();
+    }
+
+    public void updateUserPasswordById(String id, UserUpdatePasswordDto input) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        User user = userRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        if (!(passwordEncoder.matches(input.getOldPassword(), user.getPasswordHash()))) {
+            throw new InvalidCredentialsException("OLD_PASSWORD_INCORRECT");
+        }
+
+        if (!(input.getNewPassword().equals(input.getValidPassword()))) {
+            throw new BadRequestException("PASSWORDS_DO_NOT_MATCH");
+        }
+
+        if (passwordEncoder.matches(input.getNewPassword(), user.getPasswordHash())) {
+            throw new BadRequestException("NEW_PASSWORD_SAME_AS_OLD");
+        }
+
+        user.setPasswordHash(passwordEncoder.encode(input.getNewPassword()));
+
+        userRepository.save(user);
     }
 }
