@@ -48,7 +48,7 @@ public class AgencyController {
     }
 
     @PutMapping("/agencies/{id}")
-    public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgencyById(@PathVariable String id,
+    public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgencyById(@Valid @PathVariable String id,
             @RequestBody AgencyRequestDto agencyRequestDto) {
         AgencyResponseDto agencyResponseDto = agencyService.updateAgencyById(agencyRequestDto, id);
 
