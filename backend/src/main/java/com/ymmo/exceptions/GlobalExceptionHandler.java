@@ -9,7 +9,7 @@ import com.ymmo.response.GlobalResponse;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<GlobalResponse<HttpStatus>> handleEmailExists(EmailAlreadyExistsException ex) {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.CONFLICT);
@@ -21,7 +21,17 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceNotFound.class)
-    public ResponseEntity<GlobalResponse<HttpStatus>> handleAgencyNotFound(ResourceNotFound ex) {
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleRessourceNotFound(ResourceNotFound ex) {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleInvalidCredentialsNotFound(InvalidCredentialsException ex) {
+        return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.UNAUTHORIZED);
+    }
+
+    @ExceptionHandler(BadRequestException.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleBadRequest(BadRequestException ex) {
+        return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.BAD_REQUEST);
     }
 }

@@ -49,7 +49,7 @@ public class AgencyController {
 
     @PutMapping("/agencies/{id}")
     public ResponseEntity<GlobalResponse<AgencyResponseDto>> updateAgencyById(@PathVariable String id,
-            @RequestBody AgencyRequestDto agencyRequestDto) {
+            @RequestBody @Valid AgencyRequestDto agencyRequestDto) {
         AgencyResponseDto agencyResponseDto = agencyService.updateAgencyById(agencyRequestDto, id);
 
         return new ResponseEntity<>(GlobalResponse.success(agencyResponseDto), HttpStatus.OK);

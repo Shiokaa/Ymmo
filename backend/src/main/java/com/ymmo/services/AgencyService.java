@@ -99,7 +99,7 @@ public class AgencyService {
         UUID uuid = ConvertType.stringToUuid(id);
 
         Optional<Agency> existingAgency = agencyRepository.findByEmail(input.getEmail());
-        if (existingAgency.isPresent() && !existingAgency.get().getId().equals(uuid)) {
+        if (existingAgency.isPresent() && !(existingAgency.get().getId().equals(uuid))) {
             throw new EmailAlreadyExistsException();
         }
 
