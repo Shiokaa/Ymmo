@@ -12,7 +12,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@JsonPropertyOrder({ "id", "name", "email", "phone", "address", "city", "postalCode", "description", "status" })
+@JsonPropertyOrder({ "id", "name", "description", "email", "phone", "address", "city", "postalCode", "status" })
 public class AgencyResponseDto {
     private UUID id;
     private String name;
