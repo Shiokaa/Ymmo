@@ -117,4 +117,11 @@ public class UserService {
 
         userRepository.save(user);
     }
+
+    public void deleteUserById(String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        userRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+        userRepository.deleteById(uuid);
+    }
 }

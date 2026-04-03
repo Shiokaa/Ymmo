@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
@@ -48,6 +49,12 @@ public class UserController {
     public ResponseEntity<GlobalResponse<HttpStatus>> updateUserPasswordById(@PathVariable String id,
             @RequestBody @Valid UserUpdatePasswordDto input) {
         userService.updateUserPasswordById(id, input);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
+    }
+
+    @DeleteMapping("users/{id}")
+    public ResponseEntity<GlobalResponse<HttpStatus>> deleteUserById(@PathVariable String id) {
+        userService.deleteUserById(id);
         return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
 }
