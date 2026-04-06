@@ -1,8 +1,7 @@
 package com.ymmo.entities;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -24,6 +23,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -34,6 +36,8 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@Builder
 public class Property {
     // Génération d'un UUID automatiquement
     @Id
@@ -52,6 +56,7 @@ public class Property {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(columnDefinition = "varchar(50) DEFAULT 'HOUSE'")
+    @Builder.Default
     private PropertyType type = PropertyType.HOUSE;
     @NotNull
     private String address;
@@ -71,10 +76,10 @@ public class Property {
 
     @CreatedDate
     @NotNull
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
     @Nullable
-    private Timestamp deletedAt;
+    private LocalDateTime deletedAt;
 }
