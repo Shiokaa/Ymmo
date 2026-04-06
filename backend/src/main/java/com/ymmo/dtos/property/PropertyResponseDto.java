@@ -2,6 +2,7 @@ package com.ymmo.dtos.property;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -16,12 +17,13 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-@JsonPropertyOrder({ "id", "agency", "title", "description", "type", "address", "city", "postalCode", "price", "size",
+@JsonPropertyOrder({ "id", "title", "description", "type", "address", "city", "postalCode", "price", "size",
         "roomsCount", "available", "createdAt",
-        "updatedAt" })
+        "updatedAt", "agency", "propertyImages" })
 public class PropertyResponseDto {
     private UUID id;
     private AgencyResponseDto agency;
+    private List<PropertyImageResponseDto> propertyImages;
     private String title;
     private String description;
     private PropertyType type;
