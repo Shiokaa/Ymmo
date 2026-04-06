@@ -1,6 +1,5 @@
 package com.ymmo.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -14,39 +13,23 @@ import com.ymmo.dtos.agency.AgencyResponseDto;
 import com.ymmo.entities.Agency;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
 import com.ymmo.exceptions.ResourceNotFound;
+import com.ymmo.mappers.AgencyMapper;
 import com.ymmo.repositories.AgencyRepository;
 import com.ymmo.utils.ConvertType;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class AgencyService {
 
     private final AgencyRepository agencyRepository;
-
-    public AgencyService(AgencyRepository agencyRepository) {
-        this.agencyRepository = agencyRepository;
-    }
+    private final AgencyMapper agencyMapper;
 
     public List<AgencyResponseDto> getAllAgencies() {
         List<Agency> agencies = agencyRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
 
-        List<AgencyResponseDto> agenciesResponse = new ArrayList<>();
-        for (Agency agency : agencies) {
-            AgencyResponseDto agencyResponse = AgencyResponseDto.builder()
-                    .id(agency.getId())
-                    .name(agency.getName())
-                    .description(agency.getDescription())
-                    .email(agency.getEmail())
-                    .address(agency.getAddress())
-                    .city(agency.getCity())
-                    .postalCode(agency.getPostalCode())
-                    .phone(agency.getPhone())
-                    .status(agency.getStatus())
-                    .build();
-
-            agenciesResponse.add(agencyResponse);
-        }
-
-        return agenciesResponse;
+        return agencyMapper.toDtoList(agencies);
     }
 
     public AgencyResponseDto getAgencyById(String id) {
@@ -54,16 +37,7 @@ public class AgencyService {
 
         Agency agency = agencyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
 
-        return AgencyResponseDto.builder()
-                .id(agency.getId())
-                .name(agency.getName())
-                .description(agency.getDescription())
-                .email(agency.getEmail())
-                .address(agency.getAddress())
-                .city(agency.getCity())
-                .postalCode(agency.getPostalCode())
-                .phone(agency.getPhone())
-                .status(agency.getStatus()).build();
+        return agencyMapper.toDto(agency);
     }
 
     public AgencyResponseDto createAgency(AgencyRequestDto input) {
@@ -83,16 +57,7 @@ public class AgencyService {
             throw new EmailAlreadyExistsException();
         }
 
-        return AgencyResponseDto.builder()
-                .id(agency.getId())
-                .name(agency.getName())
-                .description(agency.getDescription())
-                .email(agency.getEmail())
-                .address(agency.getAddress())
-                .city(agency.getCity())
-                .postalCode(agency.getPostalCode())
-                .phone(agency.getPhone())
-                .status(agency.getStatus()).build();
+        return agencyMapper.toDto(agency);
     }
 
     public AgencyResponseDto updateAgencyById(AgencyRequestDto input, String id) {
@@ -117,16 +82,7 @@ public class AgencyService {
 
         agency = agencyRepository.save(agency);
 
-        return AgencyResponseDto.builder()
-                .id(agency.getId())
-                .name(agency.getName())
-                .description(agency.getDescription())
-                .email(agency.getEmail())
-                .address(agency.getAddress())
-                .city(agency.getCity())
-                .postalCode(agency.getPostalCode())
-                .phone(agency.getPhone())
-                .status(agency.getStatus()).build();
+        return agencyMapper.toDto(agency);
     }
 
     public void deleteAgencyById(String id) {

@@ -1,6 +1,5 @@
 package com.ymmo.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,39 +16,23 @@ import com.ymmo.exceptions.BadRequestException;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
 import com.ymmo.exceptions.InvalidCredentialsException;
 import com.ymmo.exceptions.ResourceNotFound;
+import com.ymmo.mappers.UserMapper;
 import com.ymmo.repositories.UserRepository;
 import com.ymmo.utils.ConvertType;
 
+import lombok.AllArgsConstructor;
+
 @Service
+@AllArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-
     private final PasswordEncoder passwordEncoder;
-
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private final UserMapper userMapper;
 
     public List<UserResponseDto> getAllUsers() {
         List<User> users = userRepository.findAll(Sort.by(Sort.Direction.ASC, "createdAt"));
 
-        List<UserResponseDto> userResponseDtos = new ArrayList<>();
-        for (User user : users) {
-            UserResponseDto userResponseDto = UserResponseDto.builder()
-                    .id(user.getId())
-                    .firstName(user.getFirstName())
-                    .lastName(user.getLastName())
-                    .email(user.getEmail())
-                    .phone(user.getPhone())
-                    .role(user.getRole())
-                    .createdAt(user.getCreatedAt())
-                    .updatedAt(user.getUpdatedAt()).build();
-
-            userResponseDtos.add(userResponseDto);
-        }
-
-        return userResponseDtos;
+        return userMapper.toDtoList(users);
     }
 
     public UserResponseDto getUserById(String id) {
@@ -57,15 +40,7 @@ public class UserService {
 
         User user = userRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt()).build();
+        return userMapper.toDto(user);
     }
 
     public UserResponseDto updateUserProfileById(String id, UserUpdateProfilDto input) {
@@ -85,15 +60,7 @@ public class UserService {
 
         user = userRepository.save(user);
 
-        return UserResponseDto.builder()
-                .id(user.getId())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .email(user.getEmail())
-                .phone(user.getPhone())
-                .role(user.getRole())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt()).build();
+        return userMapper.toDto(user);
     }
 
     public void updateUserPasswordById(String id, UserUpdatePasswordDto input) {
