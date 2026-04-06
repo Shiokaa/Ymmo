@@ -11,6 +11,7 @@ import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @RestController
 public class PropertyController {
@@ -23,6 +24,11 @@ public class PropertyController {
     @GetMapping("/properties")
     public ResponseEntity<GlobalResponse<List<PropertyResponseDto>>> getAllProperties() {
         return new ResponseEntity<>(GlobalResponse.success(propertyService.getAllProperties()), HttpStatus.OK);
+    }
+
+    @GetMapping("/properties/{id}")
+    public ResponseEntity<GlobalResponse<PropertyResponseDto>> getPropertyById(@PathVariable String id) {
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
 
 }
