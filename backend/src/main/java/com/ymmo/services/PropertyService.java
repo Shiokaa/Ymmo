@@ -6,8 +6,12 @@ import java.util.UUID;
 import com.ymmo.mappers.PropertyMapper;
 import org.springframework.stereotype.Service;
 
+import com.ymmo.dtos.property.PropertyRequestDto;
 import com.ymmo.dtos.property.PropertyResponseDto;
+import com.ymmo.entities.Agency;
 import com.ymmo.entities.Property;
+import com.ymmo.exceptions.ResourceNotFound;
+import com.ymmo.repositories.AgencyRepository;
 import com.ymmo.repositories.PropertyRepository;
 import com.ymmo.utils.ConvertType;
 
@@ -18,6 +22,7 @@ import lombok.AllArgsConstructor;
 public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyMapper propertyMapper;
+    private final AgencyRepository agencyRepository;
 
     public List<PropertyResponseDto> getAllProperties() {
         List<Property> properties = propertyRepository.findAllWithAgencyAndImages();
@@ -31,5 +36,23 @@ public class PropertyService {
         Property property = propertyRepository.findByIdWithAgencyAndImages(uuid);
 
         return propertyMapper.toDto(property);
+    }
+
+    public PropertyResponseDto createProperty(PropertyRequestDto input) {
+        Agency agency = agencyRepository.findById(input.getAgencyId()).orElseThrow(ResourceNotFound::new);
+
+        Property property = Property.builder().agency(agency)
+                .title(input.getTitle())
+                .description(input.getDescription())
+                .type(input.getType())
+                .address(input.getAddress())
+                .city(input.getCity())
+                .postalCode(input.getPostalCode())
+                .price(input.getPrice())
+                .size(input.getSize())
+                .roomsCount(input.getRoomsCount())
+                .available(input.isAvailable()).build();
+
+        return propertyMapper.toDto(propertyRepository.save(property));
     }
 }
