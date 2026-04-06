@@ -28,7 +28,7 @@ public class PropertyController {
 
     @GetMapping("/properties/{id}")
     public ResponseEntity<GlobalResponse<PropertyResponseDto>> getPropertyById(@PathVariable String id) {
-        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
+        return new ResponseEntity<>(GlobalResponse.success(propertyService.getPropertyById(id)), HttpStatus.OK);
     }
 
 }
