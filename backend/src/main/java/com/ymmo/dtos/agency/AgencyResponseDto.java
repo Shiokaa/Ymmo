@@ -1,7 +1,9 @@
 package com.ymmo.dtos.agency;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import com.ymmo.enums.AgencyStatus;
 
@@ -23,4 +25,8 @@ public class AgencyResponseDto {
     private String postalCode;
     private String phone;
     private AgencyStatus status;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime createdAt;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
+    private LocalDateTime updatedAt;
 }
