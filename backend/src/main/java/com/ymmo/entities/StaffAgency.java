@@ -35,12 +35,12 @@ public class StaffAgency {
     private UUID id;
 
     @ManyToOne
-    @JoinColumn(name = "user_uuid")
+    @JoinColumn(name = "user_id")
     @NotNull
     private User user;
 
     @ManyToOne
-    @JoinColumn(name = "agency_uuid")
+    @JoinColumn(name = "agency_id")
     @NotNull
     private Agency agency;
 

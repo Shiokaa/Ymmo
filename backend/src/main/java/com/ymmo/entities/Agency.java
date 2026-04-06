@@ -1,7 +1,6 @@
 package com.ymmo.entities;
 
-import java.sql.Timestamp;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
@@ -66,10 +65,10 @@ public class Agency {
 
     @CreatedDate
     @NotNull
-    private Instant createdAt;
+    private LocalDateTime createdAt;
     @LastModifiedDate
     @NotNull
-    private Instant updatedAt;
+    private LocalDateTime updatedAt;
     @Nullable
-    private Timestamp deletedAt;
+    private LocalDateTime deletedAt;
 }
