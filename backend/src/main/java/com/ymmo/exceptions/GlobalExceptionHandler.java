@@ -2,6 +2,7 @@ package com.ymmo.exceptions;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -33,5 +34,22 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BadRequestException.class)
     public ResponseEntity<GlobalResponse<HttpStatus>> handleBadRequest(BadRequestException ex) {
         return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleValidationError(MethodArgumentNotValidException ex) {
+        var fieldError = ex.getBindingResult().getFieldError();
+        String message;
+        if (fieldError != null) {
+            message = String.format("Validation error on '%s': %s", fieldError.getField(), fieldError.getDefaultMessage());
+        } else {
+            message = "Validation error in the request";
+        }
+        return new ResponseEntity<>(GlobalResponse.error(message), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleGenericException(Exception ex) {
+        return new ResponseEntity<>(GlobalResponse.error("An internal server error occurred"), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
