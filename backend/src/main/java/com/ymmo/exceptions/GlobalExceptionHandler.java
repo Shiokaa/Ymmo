@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.ymmo.response.GlobalResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
@@ -41,7 +44,8 @@ public class GlobalExceptionHandler {
         var fieldError = ex.getBindingResult().getFieldError();
         String message;
         if (fieldError != null) {
-            message = String.format("Validation error on '%s': %s", fieldError.getField(), fieldError.getDefaultMessage());
+            message = String.format("Validation error on '%s': %s", fieldError.getField(),
+                    fieldError.getDefaultMessage());
         } else {
             message = "Validation error in the request";
         }
@@ -50,6 +54,8 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<GlobalResponse<HttpStatus>> handleGenericException(Exception ex) {
-        return new ResponseEntity<>(GlobalResponse.error("An internal server error occurred"), HttpStatus.INTERNAL_SERVER_ERROR);
+        log.error("An internal server error occurred", ex);
+        return new ResponseEntity<>(GlobalResponse.error("An internal server error occurred"),
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
