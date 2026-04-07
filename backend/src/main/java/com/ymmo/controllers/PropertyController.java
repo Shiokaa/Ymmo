@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
+
 @RestController
 public class PropertyController {
     private final PropertyService propertyService;
@@ -42,5 +43,4 @@ public class PropertyController {
         PropertyResponseDto propertyResponseDto = propertyService.createProperty(input);
         return new ResponseEntity<>(GlobalResponse.success(propertyResponseDto), HttpStatus.CREATED);
     }
-
 }
