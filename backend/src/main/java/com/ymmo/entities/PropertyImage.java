@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "property_images")
+@Table(name = "property_images", uniqueConstraints = {
+        @UniqueConstraint(name = "UniqueCoverAndProperty", columnNames = { "is_cover", "property_id" }) })
 @EntityListeners(AuditingEntityListener.class)
 @Setter
 @Getter
