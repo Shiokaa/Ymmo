@@ -5,15 +5,20 @@ import java.util.List;
 import java.util.UUID;
 
 import com.ymmo.mappers.PropertyMapper;
+
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import com.ymmo.dtos.property.PropertyImageRequestDto;
 import com.ymmo.dtos.property.PropertyRequestDto;
 import com.ymmo.dtos.property.PropertyResponseDto;
 import com.ymmo.entities.Agency;
 import com.ymmo.entities.Property;
 import com.ymmo.entities.PropertyImage;
+import com.ymmo.exceptions.IsCoverAlreadyExistsException;
 import com.ymmo.exceptions.ResourceNotFound;
 import com.ymmo.repositories.AgencyRepository;
+import com.ymmo.repositories.PropertyImageRepository;
 import com.ymmo.repositories.PropertyRepository;
 import com.ymmo.utils.ConvertType;
 
@@ -25,6 +30,7 @@ public class PropertyService {
     private final PropertyRepository propertyRepository;
     private final PropertyMapper propertyMapper;
     private final AgencyRepository agencyRepository;
+    private final PropertyImageRepository propertyImageRepository;
 
     public List<PropertyResponseDto> getAllProperties() {
         List<Property> properties = propertyRepository.findAllWithAgencyAndImages();
@@ -54,5 +60,22 @@ public class PropertyService {
         property.addImages(propertyImages);
 
         return propertyMapper.toDto(propertyRepository.save(property));
+    }
+
+    public PropertyResponseDto createPropertyImages(PropertyImageRequestDto input, String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        Property property = propertyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        PropertyImage propertyImage = propertyMapper.fromImageDto(input);
+        propertyImage.setProperty(property);
+
+        try {
+            propertyImageRepository.save(propertyImage);
+        } catch (DataIntegrityViolationException ex) {
+            throw new IsCoverAlreadyExistsException();
+        }
+
+        return propertyMapper.toDto(propertyRepository.findByIdWithAgencyAndImages(uuid));
     }
 }
