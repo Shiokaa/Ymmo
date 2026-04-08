@@ -32,6 +32,7 @@ public interface PropertyMapper {
     List<PropertyImageResponseDto> toImageDtoList(List<PropertyImage> images);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "property", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
