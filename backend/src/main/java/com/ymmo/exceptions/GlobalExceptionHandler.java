@@ -58,4 +58,9 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(GlobalResponse.error("An internal server error occurred"),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
+
+    @ExceptionHandler(IsCoverAlreadyExistsException.class)
+    public ResponseEntity<GlobalResponse<HttpStatus>> handleIsCoverExists(Exception ex) {
+        return new ResponseEntity<>(GlobalResponse.error(ex.getMessage()), HttpStatus.CONFLICT);
+    }
 }
