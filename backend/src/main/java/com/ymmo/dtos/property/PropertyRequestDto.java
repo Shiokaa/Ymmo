@@ -1,7 +1,6 @@
 package com.ymmo.dtos.property;
 
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.UUID;
 
 import com.ymmo.enums.PropertyType;
@@ -18,7 +17,6 @@ import lombok.Setter;
 public class PropertyRequestDto {
     @NotNull
     private UUID agencyId;
-    private List<PropertyImageRequestDto> propertyImages;
     @NotBlank
     private String title;
     @NotBlank
