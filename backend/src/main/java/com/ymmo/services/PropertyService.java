@@ -90,4 +90,17 @@ public class PropertyService {
 
         propertyRepository.delete(property);
     }
+
+    public void deletePropertyImageById(String propertyId, String imageId) {
+        UUID propertyUuid = ConvertType.stringToUuid(propertyId);
+        UUID imageUuid = ConvertType.stringToUuid(imageId);
+
+        PropertyImage propertyImage = propertyImageRepository.findById(imageUuid).orElseThrow(ResourceNotFound::new);
+
+        if (!propertyImage.getProperty().getId().equals(propertyUuid)) {
+            throw new IllegalArgumentException();
+        }
+
+        propertyImageRepository.delete(propertyImage);
+    }
 }

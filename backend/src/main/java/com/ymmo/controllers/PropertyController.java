@@ -66,4 +66,11 @@ public class PropertyController {
         propertyService.deletePropertyById(id);
         return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
     }
+
+    @DeleteMapping("/properties/{propertyId}/images/{imageId}")
+    public ResponseEntity<GlobalResponse<HttpStatus>> deletePropertyImageById(@PathVariable String propertyId,
+            @PathVariable String imageId) {
+        propertyService.deletePropertyImageById(propertyId, imageId);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
+    }
 }
