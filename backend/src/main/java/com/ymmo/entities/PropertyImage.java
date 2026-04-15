@@ -45,11 +45,8 @@ public class PropertyImage {
     @NotNull
     private Property property;
 
-    @NotNull
     private String imageUrl;
-    @NotNull
     private String description;
-    @NotNull
     private Boolean isCover;
 
     @CreatedDate
