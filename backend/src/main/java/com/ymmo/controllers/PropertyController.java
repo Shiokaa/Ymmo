@@ -14,10 +14,12 @@ import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 public class PropertyController {
@@ -49,5 +51,13 @@ public class PropertyController {
             @RequestBody @Valid PropertyImageRequestDto input, @PathVariable String id) {
         PropertyResponseDto propertyResponseDto = propertyService.createPropertyImages(input, id);
         return new ResponseEntity<>(GlobalResponse.success(propertyResponseDto), HttpStatus.CREATED);
+    }
+
+    @PutMapping("/properties/{id}")
+    public ResponseEntity<GlobalResponse<PropertyResponseDto>> updatePropertyById(@PathVariable String id,
+            @RequestBody @Valid PropertyRequestDto propertyRequestDto) {
+        PropertyResponseDto propertyResponseDto = propertyService.updatePropertyById(propertyRequestDto, id);
+        return new ResponseEntity<>(GlobalResponse.success(propertyResponseDto),
+                HttpStatus.OK);
     }
 }

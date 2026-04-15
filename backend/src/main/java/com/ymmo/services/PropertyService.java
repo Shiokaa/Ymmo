@@ -52,12 +52,10 @@ public class PropertyService {
         Property property = propertyMapper.fromDto(input);
         property.setAgency(agency);
 
-        List<PropertyImage> propertyImages = new ArrayList<>();
         if (input.getPropertyImages() != null) {
-            propertyImages = propertyMapper.fromImageDtoList(input.getPropertyImages());
+            List<PropertyImage> images = propertyMapper.fromImageDtoList(input.getPropertyImages());
+            property.addImages(images);
         }
-
-        property.addImages(propertyImages);
 
         return propertyMapper.toDto(propertyRepository.save(property));
     }
@@ -77,5 +75,28 @@ public class PropertyService {
         }
 
         return propertyMapper.toDto(propertyRepository.findByIdWithAgencyAndImages(uuid));
+    }
+
+    public PropertyResponseDto updatePropertyById(PropertyRequestDto input, String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        Agency agency = agencyRepository.findById(input.getAgencyId()).orElseThrow(ResourceNotFound::new);
+
+        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid);
+        property.setAgency(agency);
+
+        property.getPropertyImages().clear();
+
+        property = propertyRepository.saveAndFlush(property);
+
+        List<PropertyImage> propertyImages = new ArrayList<>();
+        if (input.getPropertyImages() != null) {
+            List<PropertyImage> newImages = propertyMapper.fromImageDtoList(input.getPropertyImages());
+            property.addImages(newImages);
+        }
+
+        property.addImages(propertyImages);
+
+        return propertyMapper.toDto(propertyRepository.save(property));
     }
 }
