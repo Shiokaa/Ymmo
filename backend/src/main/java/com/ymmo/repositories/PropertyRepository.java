@@ -1,6 +1,7 @@
 package com.ymmo.repositories;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,5 +17,5 @@ public interface PropertyRepository extends JpaRepository<Property, UUID> {
     List<Property> findAllWithAgencyAndImages();
 
     @Query("SELECT p FROM Property p LEFT JOIN FETCH p.agency LEFT JOIN FETCH p.propertyImages WHERE p.id = :id")
-    Property findByIdWithAgencyAndImages(@Param("id") UUID id);
+    Optional<Property> findByIdWithAgencyAndImages(@Param("id") UUID id);
 }
