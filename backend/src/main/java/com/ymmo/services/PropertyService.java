@@ -1,6 +1,5 @@
 package com.ymmo.services;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -52,11 +51,6 @@ public class PropertyService {
         Property property = propertyMapper.fromDto(input);
         property.setAgency(agency);
 
-        if (input.getPropertyImages() != null) {
-            List<PropertyImage> images = propertyMapper.fromImageDtoList(input.getPropertyImages());
-            property.addImages(images);
-        }
-
         return propertyMapper.toDto(propertyRepository.save(property));
     }
 
@@ -85,18 +79,6 @@ public class PropertyService {
 
         Property property = propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new);
         property.setAgency(agency);
-
-        property.getPropertyImages().clear();
-
-        property = propertyRepository.saveAndFlush(property);
-
-        List<PropertyImage> propertyImages = new ArrayList<>();
-        if (input.getPropertyImages() != null) {
-            List<PropertyImage> newImages = propertyMapper.fromImageDtoList(input.getPropertyImages());
-            property.addImages(newImages);
-        }
-
-        property.addImages(propertyImages);
 
         return propertyMapper.toDto(propertyRepository.save(property));
     }
