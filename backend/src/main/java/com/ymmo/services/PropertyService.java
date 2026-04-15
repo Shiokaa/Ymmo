@@ -41,7 +41,7 @@ public class PropertyService {
     public PropertyResponseDto getPropertyById(String id) {
         UUID uuid = ConvertType.stringToUuid(id);
 
-        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid);
+        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new);
 
         return propertyMapper.toDto(property);
     }
@@ -74,7 +74,8 @@ public class PropertyService {
             throw new IsCoverAlreadyExistsException();
         }
 
-        return propertyMapper.toDto(propertyRepository.findByIdWithAgencyAndImages(uuid));
+        return propertyMapper
+                .toDto(propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new));
     }
 
     public PropertyResponseDto updatePropertyById(PropertyRequestDto input, String id) {
@@ -82,7 +83,7 @@ public class PropertyService {
 
         Agency agency = agencyRepository.findById(input.getAgencyId()).orElseThrow(ResourceNotFound::new);
 
-        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid);
+        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new);
         property.setAgency(agency);
 
         property.getPropertyImages().clear();
@@ -98,5 +99,13 @@ public class PropertyService {
         property.addImages(propertyImages);
 
         return propertyMapper.toDto(propertyRepository.save(property));
+    }
+
+    public void deletePropertyById(String id) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        Property property = propertyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        propertyRepository.delete(property);
     }
 }

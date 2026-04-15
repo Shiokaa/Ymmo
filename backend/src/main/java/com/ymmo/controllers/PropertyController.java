@@ -60,4 +60,10 @@ public class PropertyController {
         return new ResponseEntity<>(GlobalResponse.success(propertyResponseDto),
                 HttpStatus.OK);
     }
+
+    @DeleteMapping("/properties/{id}")
+    public ResponseEntity<GlobalResponse<HttpStatus>> deletePropertyById(@PathVariable String id) {
+        propertyService.deletePropertyById(id);
+        return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
+    }
 }
