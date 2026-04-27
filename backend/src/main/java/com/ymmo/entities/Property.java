@@ -2,6 +2,7 @@ package com.ymmo.entities;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.ymmo.enums.PropertyType;
 
 import jakarta.annotation.Nullable;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -52,8 +54,9 @@ public class Property {
     @NotNull
     private Agency agency;
 
-    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY)
-    private List<PropertyImage> propertyImages;
+    @OneToMany(mappedBy = "property", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<PropertyImage> propertyImages = new ArrayList<>();
 
     @NotNull
     private String title;
@@ -88,4 +91,9 @@ public class Property {
     private LocalDateTime updatedAt;
     @Nullable
     private LocalDateTime deletedAt;
+
+    public void addImages(List<PropertyImage> images) {
+        images.forEach(image -> image.setProperty(this));
+        this.propertyImages.addAll(images);
+    }
 }
