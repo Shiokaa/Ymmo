@@ -1,0 +1,12 @@
+target/
+.git/
+.gitignore
+.env
+*.md
+.idea/
+*.iml
+.vscode/
+uploads/
+dc-postgresql.yml
+Dockerfile
+.dockerignore
