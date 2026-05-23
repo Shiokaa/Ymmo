@@ -1,0 +1,22 @@
+---
+# Orchestration du rôle : chaque étape est isolée dans son fichier
+# pour permettre l'exécution sélective via tags Ansible.
+- name: Vérifier les prérequis (vault, variables)
+  ansible.builtin.import_tasks: 00_assert.yml
+  tags: [always]
+
+- name: Configurer le serveur WireGuard (génération des clés par OPNsense)
+  ansible.builtin.import_tasks: 10_server.yml
+  tags: [server]
+
+- name: Enregistrer les peers (agences) sur OPNsense
+  ansible.builtin.import_tasks: 20_peers.yml
+  tags: [peers]
+
+- name: Configurer les règles firewall WireGuard
+  ansible.builtin.import_tasks: 30_firewall.yml
+  tags: [firewall]
+
+- name: Tests de validation post-configuration
+  ansible.builtin.import_tasks: 99_smoke.yml
+  tags: [never, smoke]

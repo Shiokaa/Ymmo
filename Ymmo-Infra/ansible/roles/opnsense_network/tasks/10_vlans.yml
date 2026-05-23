@@ -1,0 +1,17 @@
+---
+# Configure les devices VLAN (vlan0.10, vlan0.20, vlan0.30, vlan0.99).
+# Les entrees <vlans> et <interfaces><opt*> sont deja pre-declarees par Packer
+# (cf. opnsense-setup.sh, section 7), car l API OPNsense ne permet pas
+# l assignation d interfaces (issue core#7324).
+# Le parametre "device" est obligatoire pour eviter l auto-naming sequentiel
+# introduit dans OPNsense 22.1.6 (vlan01, vlan02...).
+- name: "VLAN | Declarer les interfaces VLAN du Siege"
+  oxlorg.opnsense.interface_vlan:
+    description: "{{ item.name }}"
+    interface: "{{ item.parent }}"
+    vlan: "{{ item.tag }}"
+    device: "{{ item.device }}"
+    state: present
+  loop: "{{ opnsense_network_vlans }}"
+  loop_control:
+    label: "{{ item.name }} (tag {{ item.tag }})"

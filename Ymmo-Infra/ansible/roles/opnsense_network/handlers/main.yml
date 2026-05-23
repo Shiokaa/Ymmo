@@ -1,0 +1,3 @@
+---
+# Volontairement vide : chaque module oxlorg.opnsense fait reload: true
+# par defaut, ce qui suffit pour 4 VLANs.

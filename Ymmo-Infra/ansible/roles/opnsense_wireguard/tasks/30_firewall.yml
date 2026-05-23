@@ -1,0 +1,18 @@
+---
+# Le template Packer a déjà baked une règle pour TCP 443 (accès API).
+# On ajoute ici la règle UDP 51820 pour le tunnel WireGuard.
+# match_fields: ['description'] garantit l'idempotence sur re-run.
+
+- name: "Firewall | Autoriser WireGuard UDP {{ wireguard_server_port }} sur le WAN"
+  oxlorg.opnsense.rule:
+    description: "Allow-WireGuard-WAN-UDP{{ wireguard_server_port }}"
+    match_fields: ['description']
+    action: pass
+    interface: ["wan"]
+    direction: in
+    ip_protocol: inet
+    protocol: udp
+    destination_port: "{{ wireguard_server_port }}"
+    destination_net: "(self)"
+    enabled: true
+    state: present

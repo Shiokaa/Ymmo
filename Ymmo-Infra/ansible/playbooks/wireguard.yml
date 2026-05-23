@@ -1,0 +1,106 @@
+---
+# Playbook orchestrateur : setup WireGuard complet (hub + spokes).
+# Exécuter ce playbook pour un déploiement de bout-en-bout.
+#
+# Flux d'exécution :
+#   Play 1 — OPNsense : créer le serveur WireGuard, récupérer la clé publique serveur.
+#   Play 2 — Debian   : installer wireguard-tools, générer les keypairs des agences.
+#   Play 3 — OPNsense : enregistrer les clés publiques des agences comme peers.
+#   Play 4 — Debian   : écrire wg0.conf (avec clé publique OPNsense) + démarrer le service.
+#
+# Usage :
+#   ansible-playbook -i inventory/ playbooks/wireguard.yml --ask-vault-pass
+#   ansible-playbook -i inventory/ playbooks/wireguard.yml --ask-vault-pass --tags server,keys
+
+# ── Play 1 : Serveur WireGuard sur OPNsense ───────────────────────────────────
+- name: "WireGuard | OPNsense — Configurer le serveur (hub)"
+  hosts: tag_router
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      firewall: "{{ opnsense_api_host }}"
+      ssl_verify: "{{ opnsense_ssl_verify }}"
+
+  tasks:
+    - name: "Vérifier les prérequis OPNsense"
+      ansible.builtin.import_role:
+        name: opnsense_wireguard
+        tasks_from: 00_assert.yml
+
+    - name: "Créer l'instance WireGuard et récupérer la clé publique"
+      ansible.builtin.import_role:
+        name: opnsense_wireguard
+        tasks_from: 10_server.yml
+
+    - name: "Configurer la règle firewall WireGuard"
+      ansible.builtin.import_role:
+        name: opnsense_wireguard
+        tasks_from: 30_firewall.yml
+
+# ── Play 2 : Génération des clés sur les VMs Debian ──────────────────────────
+- name: "WireGuard | Debian — Installer et générer les clés (spokes)"
+  hosts: tag_agence
+  gather_facts: false
+  become: true
+  vars:
+    ansible_user: sysadmin
+
+  tasks:
+    - name: "Vérifier les prérequis Debian"
+      ansible.builtin.import_role:
+        name: debian_wireguard
+        tasks_from: 00_assert.yml
+
+    - name: "Installer wireguard-tools"
+      ansible.builtin.import_role:
+        name: debian_wireguard
+        tasks_from: 10_install.yml
+
+    - name: "Générer la keypair WireGuard"
+      ansible.builtin.import_role:
+        name: debian_wireguard
+        tasks_from: 20_keys.yml
+
+# ── Play 3 : Enregistrement des peers sur OPNsense ───────────────────────────
+- name: "WireGuard | OPNsense — Enregistrer les peers agences"
+  hosts: tag_router
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      firewall: "{{ opnsense_api_host }}"
+      ssl_verify: "{{ opnsense_ssl_verify }}"
+
+  tasks:
+    - name: "Enregistrer les clés publiques des agences comme peers"
+      ansible.builtin.import_role:
+        name: opnsense_wireguard
+        tasks_from: 20_peers.yml
+
+# ── Play 4 : Configuration et démarrage du service sur les agences ───────────
+- name: "WireGuard | Debian — Configurer wg0.conf et démarrer le service"
+  hosts: tag_agence
+  gather_facts: false
+  become: true
+  vars:
+    ansible_user: sysadmin
+    # Clé publique du serveur OPNsense — disponible via hostvars après le play 1.
+    wg_server_pubkey: "{{ hostvars[groups['tag_router'][0]]['wg_server_pubkey'] }}"
+    # IP WAN d'OPNsense (endpoint du tunnel) — résolue dynamiquement par l'inventaire Proxmox.
+    opnsense_wan_ip: "{{ hostvars[groups['tag_router'][0]]['ansible_host'] }}"
+
+  tasks:
+    - name: "Écrire wg0.conf"
+      ansible.builtin.import_role:
+        name: debian_wireguard
+        tasks_from: 30_config.yml
+
+    - name: "Activer et démarrer wg-quick@wg0"
+      ansible.builtin.import_role:
+        name: debian_wireguard
+        tasks_from: 40_service.yml

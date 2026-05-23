@@ -1,0 +1,15 @@
+# Configuration WireGuard — {{ inventory_hostname }}
+# Généré par Ansible — ne pas modifier manuellement.
+# Pour regénérer : ansible-playbook playbooks/wireguard.yml --tags config
+
+[Interface]
+PrivateKey = {{ wg_privkey }}
+Address    = {{ wireguard_peer_tunnel_ip }}
+
+[Peer]
+# Serveur WireGuard — Siège Social (OPNsense)
+PublicKey           = {{ wg_server_pubkey }}
+Endpoint            = {{ opnsense_wan_ip }}:{{ wireguard_server_port }}
+AllowedIPs          = {{ wireguard_hub_allowed_ips }}
+# Keepalive nécessaire : l'agence est derrière NAT et initie la connexion.
+PersistentKeepalive = {{ wireguard_keepalive }}

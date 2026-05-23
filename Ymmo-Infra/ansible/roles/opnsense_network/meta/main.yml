@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  role_name: opnsense_network
+  author: ymmo-infra
+  description: Configuration reseau OPNsense (VLANs, DHCP, regles firewall) pour le Siege
+  license: MIT
+  min_ansible_version: "2.15"
+  platforms:
+    - name: FreeBSD
+      versions:
+        - "13.0"
+        - "13.1"
+        - "13.2"
+        - "14.0"
+dependencies: []

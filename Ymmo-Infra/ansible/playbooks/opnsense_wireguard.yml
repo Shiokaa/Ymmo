@@ -1,0 +1,20 @@
+---
+# Playbook : configuration WireGuard côté OPNsense (hub du siège).
+# Utiliser le playbook wireguard.yml pour le setup complet (OPNsense + Debian).
+# Ce playbook seul est utile pour reconfigurer OPNsense sans toucher aux agences.
+# Prérequis : les clés publiques des agences doivent déjà être enregistrées dans
+# opnsense_wireguard/defaults/main.yml ou passées en extra-vars.
+
+- name: "Configuration WireGuard — OPNsense (Siège)"
+  hosts: tag_router
+  gather_facts: false
+
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      firewall: "{{ opnsense_api_host }}"
+      ssl_verify: "{{ opnsense_ssl_verify }}"
+
+  roles:
+    - opnsense_wireguard

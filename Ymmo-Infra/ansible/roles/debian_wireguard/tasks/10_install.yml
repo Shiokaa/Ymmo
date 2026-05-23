@@ -1,0 +1,13 @@
+---
+# Installation de wireguard-tools sur Debian 12.
+# Le paquet inclut wg, wg-quick et les modules kernel (déjà dans le kernel 5.x+).
+
+- name: "Install | Mettre à jour le cache apt"
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Install | Installer wireguard-tools"
+  ansible.builtin.apt:
+    name: wireguard-tools
+    state: present

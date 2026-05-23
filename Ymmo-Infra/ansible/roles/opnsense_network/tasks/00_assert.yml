@@ -1,0 +1,18 @@
+---
+# Garde-fous : valider les variables critiques avant tout appel API.
+- name: Verifier que les credentials API OPNsense sont definis
+  ansible.builtin.assert:
+    that:
+      - opnsense_api_key is defined and (opnsense_api_key | length) > 0
+      - opnsense_api_secret is defined and (opnsense_api_secret | length) > 0
+    fail_msg: >-
+      Credentials API OPNsense manquants.
+      Verifier ansible/inventory/group_vars/tag_router/ et le vault.
+    success_msg: "Credentials API OPNsense valides."
+
+- name: Verifier que la liste des VLANs n est pas vide
+  ansible.builtin.assert:
+    that:
+      - opnsense_network_vlans is defined
+      - opnsense_network_vlans | length > 0
+    fail_msg: "La variable opnsense_network_vlans est vide ou non definie."

@@ -1,0 +1,5 @@
+---
+# Variables communes à tous les hôtes du groupe tag_agence (VMs agences).
+# Le compose de l'inventaire dynamique fixe ansible_user à root pour tous les hôtes.
+# On surcharge ici pour les agences Debian qui utilisent l'utilisateur sysadmin (cloud-init).
+ansible_user: sysadmin

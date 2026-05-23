@@ -1,0 +1,28 @@
+---
+# Dnsmasq est configure en mode DHCP uniquement (port: 0 = pas de DNS).
+# Unbound continue de gerer le DNS sur toutes les interfaces.
+# Les deux services ne peuvent pas coexister sur le port 53 dans OPNsense,
+# meme avec un binding par interface.
+- name: "DHCP | Activer Dnsmasq en mode DHCP only (port DNS desactive)"
+  oxlorg.opnsense.dnsmasq_general:
+    enabled: true
+    port: 0
+    interfaces: "{{ opnsense_network_vlans | map(attribute='opt') | list }}"
+    dhcp_authoritative: true
+    dhcp_fqdn: true
+    dhcp_domain: "{{ opnsense_network_dns_domain }}"
+
+# Une plage DHCP par VLAN. La description sert de cle de matching implicite :
+# ne jamais changer sa valeur apres le premier deploiement (orphelins sinon).
+- name: "DHCP | Declarer la plage DHCP par VLAN"
+  oxlorg.opnsense.dnsmasq_range:
+    description: "DHCP-{{ item.name }}"
+    interface: "{{ item.name }}"
+    start_addr: "{{ item.dhcp_start }}"
+    end_addr: "{{ item.dhcp_end }}"
+    lease_time: "{{ opnsense_network_dhcp_lease }}"
+    domain: "{{ opnsense_network_dns_domain }}"
+    state: present
+  loop: "{{ opnsense_network_vlans }}"
+  loop_control:
+    label: "{{ item.name }} ({{ item.dhcp_start }}-{{ item.dhcp_end }})"

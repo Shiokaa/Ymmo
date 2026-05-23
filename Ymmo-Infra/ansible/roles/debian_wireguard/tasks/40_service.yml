@@ -1,0 +1,10 @@
+---
+# Activation et démarrage du service wg-quick@wg0.
+# wg-quick gère l'interface, le routing et les règles iptables automatiquement.
+
+- name: "Service | Activer et démarrer wg-quick@{{ wireguard_interface }}"
+  ansible.builtin.systemd:
+    name: "wg-quick@{{ wireguard_interface }}"
+    state: started
+    enabled: true
+    daemon_reload: true

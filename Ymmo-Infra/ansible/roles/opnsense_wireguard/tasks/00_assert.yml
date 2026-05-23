@@ -1,0 +1,34 @@
+---
+# Validation des prérequis avant tout appel API.
+# Échoue explicitement plutôt que de laisser les modules OPNsense remonter une erreur
+# d'authentification peu lisible.
+- name: "Assert | Vérifier que les credentials API OPNsense sont définis"
+  ansible.builtin.assert:
+    that:
+      - opnsense_api_key is defined and (opnsense_api_key | length) > 0
+      - opnsense_api_secret is defined and (opnsense_api_secret | length) > 0
+    fail_msg: >-
+      Les variables opnsense_api_key et opnsense_api_secret doivent être définies.
+      Vérifier le vault Ansible : ansible/inventory/group_vars/all/vault.yml
+    success_msg: "Credentials API OPNsense présents."
+
+- name: "Assert | Vérifier que la clé privée WireGuard du serveur est définie"
+  ansible.builtin.assert:
+    that:
+      - wireguard_server_private_key is defined
+      - wireguard_server_private_key | length > 0
+    fail_msg: >-
+      La variable wireguard_server_private_key doit être définie dans le vault.
+      Générer une clé avec 'wg genkey' et l'ajouter dans group_vars/all/vault.yml
+      sous la clé vault_wireguard_server_private_key.
+    success_msg: "Clé privée WireGuard serveur présente."
+
+- name: "Assert | Vérifier que la liste des peers WireGuard est définie"
+  ansible.builtin.assert:
+    that:
+      - wireguard_peers is defined
+      - wireguard_peers | length > 0
+    fail_msg: >-
+      La variable wireguard_peers doit contenir au moins un peer.
+      Vérifier ansible/roles/opnsense_wireguard/defaults/main.yml
+    success_msg: "{{ wireguard_peers | length }} peer(s) défini(s)."

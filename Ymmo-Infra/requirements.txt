@@ -1,0 +1,7 @@
+# Dépendances pour le projet Ymmo-Infra
+ansible>=9.0.0
+requests>=2.31.0
+proxmoxer>=2.0.1
+netaddr>=0.10.0
+jmespath>=1.0.1
+httpx>=0.27.0

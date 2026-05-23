@@ -1,0 +1,42 @@
+---
+# Enregistrement des peers (agences) sur OPNsense.
+# Prérequis : le play debian_wireguard (20_keys.yml) doit avoir tourné avant
+# pour que le fact wg_pubkey soit disponible sur chaque VM agence.
+# L'orchestrateur wireguard.yml garantit cet ordre d'exécution.
+
+- name: "WireGuard | Vérifier que les clés publiques des agences sont disponibles"
+  ansible.builtin.assert:
+    that:
+      # Vérifier d'abord que le host existe dans l'inventaire avant d'accéder à ses facts.
+      # Accéder directement à ['wg_pubkey'] sur un host absent lève un KeyError non explicite.
+      - hostvars[item.inventory_hostname] is defined
+      - hostvars[item.inventory_hostname]['wg_pubkey'] is defined
+    fail_msg: >-
+      La clé publique de {{ item.inventory_hostname }} est introuvable.
+      Vérifier que le host existe dans l'inventaire Proxmox (tag ymmotom présent ?)
+      et que le play 'debian_wireguard - génération des clés' a bien été exécuté.
+    success_msg: "Clé publique de {{ item.name }} disponible."
+  loop: "{{ wireguard_peers }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: "WireGuard | Enregistrer les peers agences sur OPNsense"
+  oxlorg.opnsense.wireguard_peer:
+    name: "{{ item.name }}"
+    # Paramètre correct : public_key (pas pub_key).
+    # Source : https://ansible-opnsense.oxl.app/modules/wireguard.html
+    public_key: "{{ hostvars[item.inventory_hostname]['wg_pubkey'] }}"
+    # allowed_ips regroupe l'IP tunnel (/32) ET le réseau de l'agence.
+    # OPNsense route vers ce peer tout trafic correspondant à cette liste.
+    # tunnel_addresses n'existe pas dans le module — c'était un paramètre incorrect.
+    allowed_ips:
+      - "{{ item.tunnel_ip }}"
+      - "{{ item.allowed_ips }}"
+    # servers lie ce peer à l'instance serveur WireGuard côté OPNsense.
+    servers:
+      - "{{ wireguard_server_name }}"
+    state: present
+  loop: "{{ wireguard_peers }}"
+  loop_control:
+    label: "{{ item.name }}"
+  no_log: true

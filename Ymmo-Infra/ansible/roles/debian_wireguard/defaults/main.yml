@@ -1,0 +1,18 @@
+---
+# Port WireGuard du serveur OPNsense (doit correspondre à wireguard_server_port).
+wireguard_server_port: 51820
+
+# Chemin du fichier de clé privée WireGuard sur le VM agence.
+# Permissions 0600, appartient à root.
+wireguard_key_path: /etc/wireguard/wg0.key
+
+# Nom de l'interface WireGuard sur le VM agence.
+wireguard_interface: wg0
+
+# Intervalle keepalive en secondes.
+# Nécessaire car les agences sont derrière NAT et initient la connexion.
+wireguard_keepalive: 25
+
+# Réseau(x) du siège accessibles via le tunnel.
+# Tout le bloc 10.0.0.0/16 (VLANs siège) est routé via le hub.
+wireguard_hub_allowed_ips: "10.0.0.0/16"

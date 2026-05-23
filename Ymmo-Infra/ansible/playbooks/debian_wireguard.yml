@@ -1,0 +1,16 @@
+---
+# Playbook : configuration WireGuard côté agences (VMs Debian).
+# Utiliser le playbook wireguard.yml pour le setup complet (OPNsense + Debian).
+# Ce playbook seul est utile pour reconfigurer les agences sans toucher à OPNsense.
+# Prérequis : wg_server_pubkey et opnsense_wan_ip doivent être passés en extra-vars
+# si OPNsense n'est pas dans la même exécution.
+
+- name: "Configuration WireGuard — Agences (Debian)"
+  hosts: tag_agence
+  gather_facts: false
+  become: true
+  vars:
+    ansible_user: sysadmin
+
+  roles:
+    - debian_wireguard

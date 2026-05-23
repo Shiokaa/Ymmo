@@ -1,0 +1,49 @@
+---
+# Configuration reseau OPNsense pour le Siege.
+# Cette liste pilote toutes les boucles VLAN/DHCP/Firewall.
+# Les noms de devices ("vlan0.X") correspondent exactement a ce que
+# Packer ecrit dans config.xml (cf. packer/scripts/opnsense-setup.sh, section 7).
+opnsense_network_vlans:
+  - tag: 10
+    name: "SRV_SIEGE"
+    device: "vlan0.10"
+    parent: "vtnet0"
+    opt: "opt1"
+    network: "10.0.10.0"
+    gw: "10.0.10.254"
+    dhcp_start: "10.0.10.100"
+    dhcp_end: "10.0.10.200"
+  - tag: 20
+    name: "USR_SIEGE"
+    device: "vlan0.20"
+    parent: "vtnet0"
+    opt: "opt2"
+    network: "10.0.20.0"
+    gw: "10.0.20.254"
+    dhcp_start: "10.0.20.100"
+    dhcp_end: "10.0.20.200"
+  - tag: 30
+    name: "PRT_SIEGE"
+    device: "vlan0.30"
+    parent: "vtnet0"
+    opt: "opt3"
+    network: "10.0.30.0"
+    gw: "10.0.30.254"
+    dhcp_start: "10.0.30.100"
+    dhcp_end: "10.0.30.200"
+  - tag: 99
+    name: "MGT_SIEGE"
+    device: "vlan0.99"
+    parent: "vtnet0"
+    opt: "opt4"
+    network: "10.0.99.0"
+    gw: "10.0.99.254"
+    dhcp_start: "10.0.99.100"
+    dhcp_end: "10.0.99.200"
+
+# Domaine DNS interne du Siege.
+opnsense_network_dns_domain: "ymmo.local"
+
+# Duree de bail DHCP en secondes (43200 = 12h).
+# Le module dnsmasq_range attend un entier, pas une chaine "12h".
+opnsense_network_dhcp_lease: 43200

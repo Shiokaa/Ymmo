@@ -1,0 +1,37 @@
+---
+# Tests de validation post-configuration — exécution manuelle uniquement.
+# Usage : ansible-playbook playbooks/opnsense_wireguard.yml --tags smoke
+# Ces tâches sont en read-only (changed_when: false) et affichent la réponse
+# brute de l'API pour vérification manuelle.
+
+- name: "Smoke | Vérifier l'état du serveur WireGuard"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host }}/api/wireguard/server/searchServer"
+    method: GET
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    validate_certs: "{{ opnsense_ssl_verify }}"
+    force_basic_auth: true
+    return_content: true
+  register: smoke_servers
+  changed_when: false
+
+- name: "Smoke | Afficher les serveurs WireGuard configurés"
+  ansible.builtin.debug:
+    msg: "{{ smoke_servers.json }}"
+
+- name: "Smoke | Vérifier les peers WireGuard"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host }}/api/wireguard/client/searchClient"
+    method: GET
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    validate_certs: "{{ opnsense_ssl_verify }}"
+    force_basic_auth: true
+    return_content: true
+  register: smoke_peers
+  changed_when: false
+
+- name: "Smoke | Afficher les peers WireGuard configurés"
+  ansible.builtin.debug:
+    msg: "{{ smoke_peers.json }}"

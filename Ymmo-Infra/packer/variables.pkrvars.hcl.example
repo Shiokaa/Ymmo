@@ -1,0 +1,39 @@
+# ──────────────────────────────────────────────
+# Exemple de variables pour les Templates Packer
+# ──────────────────────────────────────────────
+
+# Connexion Proxmox
+proxmox_api_url          = "https://votre-proxmox:8006/api2/json"
+proxmox_api_token_id     = "packer@pve!votre-token"
+proxmox_api_token_secret = "votre-secret-ici"
+proxmox_node             = "pve"
+
+# Chemins des ISO sur votre stockage Proxmox
+iso_file          = "local:iso/debian-12.x.x-amd64-netinst.iso"
+opnsense_iso_file = "local:iso/OPNsense-26.1-dvd-amd64.iso"
+
+# Identifiants SSH pour le build Packer (Debian)
+ssh_username = "packer"
+ssh_password = "votre_mot_de_passe"
+
+# Clés publiques SSH (injectées lors du build du template)
+authorized_keys = [
+  "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC... votre-cle-publique-1"
+]
+
+# Configuration matérielle (Templates)
+vm_id           = 9000
+vm_cores        = 2
+vm_memory       = 2048
+vm_disk_size    = "20G"
+vm_storage_pool = "local-lvm"
+vm_bridge       = "vmbr0"
+
+# IP de votre PC sur le tunnel WireGuard (pour servir le preseed Debian)
+http_bind_address = "10.x.x.x"
+
+# Credentials API OPNsense (générés avec : openssl rand -hex 40)
+# Ces valeurs sont injectées dans config.xml pendant le build Packer
+# et doivent être reportées telles quelles dans le vault Ansible
+opnsense_api_key    = "votre-api-key-hex-80-chars"
+opnsense_api_secret = "votre-api-secret-hex-80-chars"

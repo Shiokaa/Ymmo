@@ -1,0 +1,37 @@
+# IA
+.claude
+CLAUDE.md
+
+# Secrets et variables locales — jamais committés
+*.pkrvars.hcl
+*.tfvars
+*.tfvars.json
+
+# État Terraform
+terraform.tfstate
+terraform.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+
+# Clés et certificats
+*.pem
+*.key
+*.crt
+*.p12
+
+# Environnement Python
+.venv/
+__pycache__/
+*.pyc
+
+# Fichiers d'environnement
+.env
+.env.*
+
+# Ansible Vault password file
+.vault_pass
+.vault_pass.txt
+
+# OS
+.DS_Store
+Thumbs.db

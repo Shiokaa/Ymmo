@@ -1,0 +1,6 @@
+---
+# Dépendances de collections Ansible pour le projet Ymmo-Infra
+# Installer avec : ansible-galaxy collection install -r collections/requirements.yml
+collections:
+  - name: oxlorg.opnsense
+    version: "25.7.8"

@@ -1,0 +1,13 @@
+---
+# Tâches de bootstrap pour OPNsense (FreeBSD)
+# Note : OPNsense n'a pas Python installé par défaut, on utilise raw ou script.
+
+- name: Verification de la connectivite SSH brute
+  ansible.builtin.raw: /usr/bin/true
+  register: ssh_test
+  changed_when: false
+
+- name: Affichage du statut de connexion
+  ansible.builtin.debug:
+    msg: "Connexion SSH a OPNsense reussie via le Bastion Proxmox !"
+  when: ssh_test.rc == 0

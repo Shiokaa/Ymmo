@@ -1,0 +1,40 @@
+---
+# Génération idempotente de la keypair WireGuard sur le VM agence.
+# La clé privée est générée une seule fois et conservée dans wireguard_key_path.
+# La clé publique est enregistrée comme fact Ansible (wg_pubkey) pour être
+# transmise à OPNsense lors du play d'enregistrement des peers.
+
+- name: "Clés | Créer le répertoire /etc/wireguard"
+  ansible.builtin.file:
+    path: /etc/wireguard
+    state: directory
+    mode: '0700'
+    owner: root
+    group: root
+
+# 'creates' garantit l'idempotence : la clé n'est jamais régénérée si le fichier existe.
+- name: "Clés | Générer la clé privée WireGuard (exécution unique)"
+  ansible.builtin.shell:
+    cmd: "wg genkey > {{ wireguard_key_path }}"
+    creates: "{{ wireguard_key_path }}"
+  no_log: true
+
+- name: "Clés | Fixer les permissions de la clé privée"
+  ansible.builtin.file:
+    path: "{{ wireguard_key_path }}"
+    mode: '0600'
+    owner: root
+    group: root
+
+- name: "Clés | Dériver la clé publique depuis la clé privée"
+  ansible.builtin.shell:
+    cmd: "cat {{ wireguard_key_path }} | wg pubkey"
+  register: wg_pubkey_result
+  changed_when: false
+  no_log: true
+
+# wg_pubkey est utilisé par opnsense_wireguard/tasks/20_peers.yml
+# via hostvars[inventory_hostname]['wg_pubkey'].
+- name: "Clés | Enregistrer la clé publique comme fact Ansible"
+  ansible.builtin.set_fact:
+    wg_pubkey: "{{ wg_pubkey_result.stdout | trim }}"

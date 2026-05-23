@@ -1,0 +1,22 @@
+---
+# Orchestration du role : chaque etape est isolee dans son fichier
+# pour permettre l execution selective via tags Ansible.
+- name: Verifier les prerequis (vault, variables)
+  ansible.builtin.import_tasks: 00_assert.yml
+  tags: [always]
+
+- name: Configurer les devices VLAN
+  ansible.builtin.import_tasks: 10_vlans.yml
+  tags: [vlans]
+
+- name: Configurer le service DHCP (Dnsmasq)
+  ansible.builtin.import_tasks: 30_dhcp.yml
+  tags: [dhcp]
+
+- name: Configurer les regles firewall
+  ansible.builtin.import_tasks: 40_firewall.yml
+  tags: [firewall]
+
+- name: Tests de validation post-configuration
+  ansible.builtin.import_tasks: 99_smoke.yml
+  tags: [never, smoke]

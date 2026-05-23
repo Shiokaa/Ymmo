@@ -1,0 +1,41 @@
+---
+# ──────────────────────────────────────────────
+# Inventaire Dynamique Proxmox - Ymmo-Infra
+# ──────────────────────────────────────────────
+plugin: community.proxmox.proxmox
+
+# Connexion via variables d'environnement
+url: "{{ lookup('env', 'PROXMOX_URL') }}"
+user: "{{ lookup('env', 'PROXMOX_USER') }}"
+token_id: "{{ lookup('env', 'PROXMOX_TOKEN_ID') }}"
+token_secret: "{{ lookup('env', 'PROXMOX_TOKEN_SECRET') }}"
+
+# Sécurité
+validate_certs: false
+
+# FILTRAGE CIBLÉ : Ne récupère que les machines du projet
+filters:
+  - "proxmox_tags_parsed is defined and 'ymmotom' in proxmox_tags_parsed"
+
+# Récupération des infos
+want_facts: true
+group_by_status: true
+
+# Création de groupes propres basés sur les tags
+keyed_groups:
+  - prefix: tag
+    key: proxmox_tags_parsed
+
+# Attribution dynamique de l'IP (Nettoyée et ciblée WAN)
+compose:
+  ansible_host: >
+    proxmox_agent_interfaces | default([]) |
+    selectattr('name', 'in', ['vtnet1', 'eth0', 'ens18']) |
+    map(attribute='ip-addresses') | 
+    flatten | 
+    reject('match', '^127\.') | 
+    reject('match', '^fe80') |
+    reject('match', '^192\.168\.1\.') |
+    first | split('/') | first | default(inventory_hostname)
+
+  ansible_user: "'root'"

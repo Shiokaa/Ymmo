@@ -1,0 +1,27 @@
+---
+# Variables de groupe pour les hôtes OPNsense
+# Ces variables sont consommées par les modules oxlorg.opnsense.
+# Les valeurs sensibles sont chargées depuis le vault Ansible
+# (group_vars/all/vault.yml) et ne doivent jamais apparaître en clair ici.
+
+# Clé API OPNsense — générée lors du bootstrap Packer
+opnsense_api_key: "{{ vault_opnsense_api_key }}"
+
+# Secret API OPNsense — généré lors du bootstrap Packer
+opnsense_api_secret: "{{ vault_opnsense_api_secret }}"
+
+# Connexion via API REST locale (pas de SSH sur OPNsense)
+ansible_connection: local
+
+# Adresse de l'OPNsense cible — résolue dynamiquement par l'inventaire Proxmox
+opnsense_api_host: "{{ ansible_host }}"
+
+# Vérification SSL désactivée : certificat auto-signé acceptable en homelab.
+# À activer (true) en environnement de production avec un certificat valide.
+opnsense_ssl_verify: false
+
+# Clé privée WireGuard du serveur OPNsense (hub du siège).
+# Générer une fois avec : wg genkey
+# Puis stocker dans le vault : ansible-vault edit inventory/group_vars/all/vault.yml
+# Ajouter la ligne : vault_wireguard_server_private_key: "<output de wg genkey>"
+wireguard_server_private_key: "{{ vault_wireguard_server_private_key }}"

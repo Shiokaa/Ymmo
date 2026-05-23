@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Ymmo-Infra
+  description: "Configuration WireGuard sur les VMs Debian simulant les agences distantes"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - wireguard
+    - vpn
+    - debian
+dependencies: []

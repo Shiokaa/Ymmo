@@ -1,0 +1,24 @@
+---
+# Nom de l'instance WireGuard dans OPNsense.
+wireguard_server_name: "WG-Siege"
+
+# Port UDP d'écoute du serveur WireGuard.
+wireguard_server_port: 51820
+
+# Adresse tunnel du siège dans le backbone VPN (10.254.0.0/24).
+wireguard_server_tunnel_ip: "10.254.0.1/24"
+
+# Liste des peers (agences).
+# - name           : identifiant affiché dans OPNsense
+# - inventory_hostname : nom de la VM dans Proxmox (= hostname Ansible)
+# - tunnel_ip      : IP du peer dans le backbone WireGuard (/32)
+# - allowed_ips    : sous-réseau(x) du site distant routés via ce peer
+wireguard_peers:
+  - name: "Agence-01"
+    inventory_hostname: "Agence-01"
+    tunnel_ip: "10.254.0.11/32"
+    allowed_ips: "10.1.0.0/16"
+  - name: "Agence-02"
+    inventory_hostname: "Agence-02"
+    tunnel_ip: "10.254.0.12/32"
+    allowed_ips: "10.2.0.0/16"

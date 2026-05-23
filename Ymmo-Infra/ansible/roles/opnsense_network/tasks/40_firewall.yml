@@ -1,0 +1,21 @@
+---
+# Regle de base : autoriser chaque VLAN interne a sortir vers Internet.
+# match_fields: ['description'] garantit l idempotence sur re-run.
+# L isolation inter-VLAN (PRT isole de USR, MGT restreint, etc.)
+# sera traitee dans une iteration ulterieure, hors scope de cette etape.
+- name: "Firewall | Autoriser les VLAN internes vers WAN"
+  oxlorg.opnsense.rule:
+    description: "Allow-{{ item.name }}-to-WAN"
+    match_fields: ['description']
+    action: pass
+    interface: ["{{ item.opt }}"]
+    direction: in
+    ip_protocol: inet
+    protocol: any
+    source_net: "{{ item.network }}/24"
+    destination_net: any
+    enabled: true
+    state: present
+  loop: "{{ opnsense_network_vlans }}"
+  loop_control:
+    label: "{{ item.name }}"

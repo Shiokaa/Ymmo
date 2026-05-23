@@ -1,0 +1,35 @@
+---
+# Écriture de /etc/wireguard/wg0.conf depuis le template Jinja2.
+# Sources des variables requises :
+#   - wg_server_pubkey        : fact set par opnsense_wireguard/10_server.yml (play 1 de wireguard.yml)
+#   - opnsense_wan_ip         : variable play (wireguard.yml play 4) via hostvars[tag_router[0]].ansible_host
+#   - wireguard_peer_tunnel_ip : host_vars/Agence-XX/main.yml (spécifique à chaque agence)
+
+- name: "Config | Lire la clé privée locale"
+  ansible.builtin.slurp:
+    src: "{{ wireguard_key_path }}"
+  register: wg_privkey_file
+  no_log: true
+
+- name: "Config | Enregistrer la clé privée comme fact temporaire"
+  ansible.builtin.set_fact:
+    wg_privkey: "{{ wg_privkey_file.content | b64decode | trim }}"
+  no_log: true
+
+- name: "Config | Écrire /etc/wireguard/{{ wireguard_interface }}.conf"
+  ansible.builtin.template:
+    src: wg0.conf.j2
+    dest: "/etc/wireguard/{{ wireguard_interface }}.conf"
+    mode: '0600'
+    owner: root
+    group: root
+  no_log: true
+  notify: Redémarrer WireGuard
+
+# Effacer la clé privée de la mémoire Ansible après usage.
+# set_fact avec une valeur vide suffit — Ansible ne persiste pas les facts entre plays.
+- name: "Config | Effacer la clé privée de la mémoire"
+  ansible.builtin.set_fact:
+    wg_privkey: ""
+    wg_privkey_file: {}
+  no_log: true

@@ -1,0 +1,20 @@
+---
+# Smoke tests manuels — invoques uniquement avec --tags smoke.
+# Verifient que l API OPNsense repond correctement apres configuration.
+- name: "Smoke | Interroger l API pour lister les VLANs configures"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host | default(ansible_host) }}/api/interfaces/vlan_settings/get"
+    method: GET
+    user: "{{ opnsense_api_key }}"
+    password: "{{ opnsense_api_secret }}"
+    force_basic_auth: true
+    validate_certs: "{{ opnsense_ssl_verify | default(false) }}"
+    return_content: true
+  register: smoke_vlans
+  changed_when: false
+
+- name: "Smoke | Afficher le statut de l API VLANs"
+  ansible.builtin.debug:
+    msg: >-
+      API VLANs : HTTP {{ smoke_vlans.status }}.
+      Verifier manuellement que les 4 VLANs Siege apparaissent dans la reponse.

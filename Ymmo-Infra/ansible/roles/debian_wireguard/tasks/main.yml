@@ -1,0 +1,22 @@
+---
+# Orchestration du rôle debian_wireguard.
+# Ce rôle s'exécute sur les VMs Debian simulant les agences distantes.
+- name: Vérifier les prérequis
+  ansible.builtin.import_tasks: 00_assert.yml
+  tags: [always]
+
+- name: Installer wireguard-tools
+  ansible.builtin.import_tasks: 10_install.yml
+  tags: [install]
+
+- name: Générer et enregistrer les clés WireGuard
+  ansible.builtin.import_tasks: 20_keys.yml
+  tags: [keys]
+
+- name: Écrire la configuration wg0.conf
+  ansible.builtin.import_tasks: 30_config.yml
+  tags: [config]
+
+- name: Activer et démarrer le service WireGuard
+  ansible.builtin.import_tasks: 40_service.yml
+  tags: [service]

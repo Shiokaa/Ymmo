@@ -1,0 +1,14 @@
+---
+galaxy_info:
+  author: Ymmo-Infra
+  description: "Configuration WireGuard site-à-site sur OPNsense (hub du siège)"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: FreeBSD
+      versions:
+        - "13.0"
+  galaxy_tags:
+    - wireguard
+    - opnsense
+    - vpn
+dependencies: []

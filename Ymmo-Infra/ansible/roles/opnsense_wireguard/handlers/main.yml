@@ -1,0 +1,4 @@
+---
+# Vide intentionnellement.
+# Les modules oxlorg.opnsense ont reload: true par défaut —
+# ils rechargent la configuration OPNsense après chaque changement.

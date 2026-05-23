@@ -1,0 +1,38 @@
+---
+# La clé privée est fournie explicitement (exigée par le module).
+# Elle est stockée dans le vault Ansible et jamais en clair dans le code.
+# La clé publique est dérivée localement avec 'wg pubkey' sur le contrôleur.
+
+- name: "WireGuard | Configurer l'instance serveur"
+  oxlorg.opnsense.wireguard_server:
+    name: "{{ wireguard_server_name }}"
+    port: "{{ wireguard_server_port }}"
+    allowed_ips:
+      - "{{ wireguard_server_tunnel_ip }}"
+    private_key: "{{ wireguard_server_private_key }}"
+    disable_routes: false
+    state: present
+  no_log: true
+
+# La clé publique est dérivée localement sur le contrôleur Ansible.
+# Cela évite un appel API supplémentaire et fonctionne sans que wg soit installé sur OPNsense.
+- name: "WireGuard | Dériver la clé publique du serveur"
+  ansible.builtin.shell:
+    cmd: "printf '%s' '{{ wireguard_server_private_key }}' | wg pubkey"
+  register: wg_pubkey_result
+  changed_when: false
+  delegate_to: localhost
+  no_log: true
+
+- name: "WireGuard | Enregistrer la clé publique comme fact Ansible"
+  ansible.builtin.set_fact:
+    wg_server_pubkey: "{{ wg_pubkey_result.stdout | trim }}"
+  no_log: true
+
+- name: "WireGuard | Confirmer que la clé publique est disponible"
+  ansible.builtin.assert:
+    that:
+      - wg_server_pubkey is defined
+      - wg_server_pubkey | length > 0
+    fail_msg: "Impossible de dériver la clé publique. Vérifier que 'wg' est installé sur le contrôleur."
+    success_msg: "Clé publique du serveur WireGuard prête."

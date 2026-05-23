@@ -1,0 +1,27 @@
+#cloud-config
+# Template Cloud-init ultra-léger pour Debian 12 - Ymmo-Infra
+hostname: ${hostname}
+fqdn: ${hostname}.internal
+
+# Fuseau horaire et Localisation
+timezone: Europe/Paris
+locale: fr_FR.UTF-8
+
+# Configuration des comptes utilisateurs
+users:
+  - name: sysadmin
+    groups: sudo
+    shell: /bin/bash
+    lock_passwd: true # Désactive l'auth par mot de passe
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    ssh_authorized_keys:
+%{ for key in ssh_public_keys ~}
+      - ${key}
+%{ endfor ~}
+
+# Activation des services essentiels
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+
+final_message: "Le système est prêt après $UPTIME secondes"

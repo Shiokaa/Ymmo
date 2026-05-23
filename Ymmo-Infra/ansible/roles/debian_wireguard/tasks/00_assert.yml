@@ -1,0 +1,13 @@
+---
+# Validation des prérequis avant d'installer et de configurer WireGuard.
+
+- name: "Assert | Vérifier que wireguard_peer_tunnel_ip est défini"
+  ansible.builtin.assert:
+    that:
+      - wireguard_peer_tunnel_ip is defined
+      - wireguard_peer_tunnel_ip | length > 0
+    fail_msg: >-
+      La variable wireguard_peer_tunnel_ip doit être définie pour chaque agence.
+      Elle correspond à l'IP du peer dans le backbone WireGuard (ex : 10.254.0.11/32).
+      Définir cette variable dans group_vars/tag_agence01/ ou en host_vars.
+    success_msg: "IP tunnel WireGuard définie : {{ wireguard_peer_tunnel_ip }}"

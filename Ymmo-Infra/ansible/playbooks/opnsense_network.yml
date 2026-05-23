@@ -1,0 +1,16 @@
+---
+# Playbook : configuration reseau OPNsense (VLANs, DHCP, firewall).
+# Pre-requis : le template Packer doit avoir ete reconstruit apres l ajout
+# de la section 7 dans opnsense-setup.sh (pre-declaration des VLANs dans config.xml).
+- name: Configuration reseau OPNsense
+  hosts: tag_router
+  gather_facts: false
+  module_defaults:
+    group/oxlorg.opnsense.all:
+      api_key: "{{ opnsense_api_key }}"
+      api_secret: "{{ opnsense_api_secret }}"
+      firewall: "{{ opnsense_api_host }}"
+      ssl_verify: "{{ opnsense_ssl_verify }}"
+
+  roles:
+    - opnsense_network

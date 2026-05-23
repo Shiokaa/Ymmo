@@ -1,0 +1,20 @@
+# ──────────────────────────────────────────────
+# Exemple de variables Terraform (Sécurisé)
+# ──────────────────────────────────────────────
+
+proxmox_api_url          = "https://votre-proxmox:8006/api2/json"
+proxmox_api_token_id     = "terraform@pve!terraform-token"
+proxmox_api_token_secret = "votre-secret"
+
+# Paramètres SSH (Accès à l'hôte physique Proxmox)
+proxmox_ssh_username         = "root"
+proxmox_ssh_private_key_path = "/home/votre-user/.ssh/id_rsa"
+
+# Liste des clés publiques SSH pour les administrateurs système (injectées via Cloud-Init)
+sysadmin_ssh_public_keys     = [
+  "ssh-ed25519 AAAAC3...", # Votre clé 1
+  "ssh-rsa AAAAB3Nza..."   # Votre clé 2
+]
+
+# Certificats
+insecure_tls = true

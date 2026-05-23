@@ -1,0 +1,17 @@
+<div class="flex flex-col items-center justify-center min-h-screen gap-6 p-10">
+    <h1 class="text-3xl font-bold">{{ message() }}</h1>
+
+    <div class="card flex flex-wrap justify-center gap-4">
+        <p-button label="Tester PrimeNG" icon="pi pi-check" (onClick)="onTestClick()" />
+        <p-button label="Vider" severity="secondary" (onClick)="message.set('Cliquez sur le bouton pour tester !')" />
+    </div>
+
+    <div class="flex flex-wrap justify-center gap-2 mt-4">
+        <p-button label="Success" severity="success" [rounded]="true" />
+        <p-button label="Info" severity="info" [rounded]="true" />
+        <p-button label="Warn" severity="warn" [rounded]="true" />
+        <p-button label="Danger" severity="danger" [rounded]="true" />
+    </div>
+</div>
+
+<router-outlet />
