@@ -1,14 +1,8 @@
-# Ymmo
+# Ymmo-Web
 
 ## Description
 
-Ymmo est une solution web centralisée conçue pour un groupe immobilier national basé à Aix-en-Provence. La plateforme digitalise l'intégralité du cycle de vente et d'achat (résidentiel et professionnel) pour le siège et ses 12 agences. L'outil sert d'interface unique pour les clients et les agents, tout en intégrant une couche d'Intelligence Artificielle pour l'analyse prédictive des tendances du marché.
-
-## Objectifs Stratégiques
-
-- **Centralisation** : Harmoniser la gestion des opérations immobilières sur l'ensemble du territoire français.
-- **Analyse de Données** : Exploiter les données du marché via l'IA pour guider les décisions d'achat/vente et optimiser les prix.
-- **Infrastructure Critique** : Déployer une architecture réseau sécurisée et évolutive (scalable) reliant le siège et les agences distantes.
+Ymmo-Web est le module applicatif de la plateforme Ymmo. Il couvre l'intégralité de la couche web : interface utilisateur, API métier et module d'intelligence artificielle. Il sert d'interface unique pour les clients et les agents immobiliers, et expose les données du marché via une API REST consommée par le frontend et le module IA.
 
 ## Stack Technique
 
@@ -22,11 +16,11 @@ Ymmo est une solution web centralisée conçue pour un groupe immobilier nationa
 ## Structure du projet
 
 ```
-Ymmo/
+Ymmo-Web/
 ├── frontend/   # Application Angular (client)
 ├── backend/    # API Spring Boot (serveur)
 ├── ai/         # Module IA & Data (Python)
-└── doc/        # Documentation technique
+└── doc/        # Documentation technique (schéma BDD, etc.)
 ```
 
 Chaque module possède son propre README avec les instructions d'installation et de configuration spécifiques :
@@ -35,75 +29,67 @@ Chaque module possède son propre README avec les instructions d'installation et
 - [backend/README.md](backend/README.md)
 - [ai/README.md](ai/README.md)
 
-## Architecture et Modélisation
+## Architecture
 
 ### Schéma de la Base de Données
 
 ![Schéma BDD](doc/schema_bdd.png)
 
+Le schéma source (dbdiagram.io) est disponible dans [doc/dbdiagram.io](doc/dbdiagram.io).
+
 ### Architecture logicielle
 
-<!-- Décrire ici l'architecture logicielle globale -->
-
-## Workflow de Développement
-
-### Conventions de nommage
-
-- Variables : lowerCamelCase
-- Fonctions : lowerCamelCase
-- Base de données : snake_case
-- Commentaires dans le code : Français
-- Messages de commit : Anglais
-
-### Gestion des branches
-
-- Branche de production : **main**
-- Branche de développement : **dev**
-  - `chore/` — Tâches de maintenance répétitives (ne touchent ni au code métier, ni aux tests)
-  - `feat/` — Ajout d'une nouvelle fonctionnalité
-  - `fix/` — Correction d'un bug
-  - `refactor/` — Modification du code sans changement de comportement (nettoyage)
-  - `docs/` — Mise à jour de documentation
-  - `test/` — Ajout ou modification de tests
-  - `style/` — Changements de formatage (n'affectent pas la logique du code)
-  - `ci/` — Modifications liées à l'intégration continue / déploiement
-
-### Convention de commit
-
-Les messages de commit suivent le format [Conventional Commits](https://www.conventionalcommits.org/) :
-
 ```
-<type>(<scope>): <description>
+Angular (frontend)
+    ↕ HTTP / REST
+Spring Boot (backend)  ←→  PostgreSQL
+    ↕
+Python (module IA)
 ```
 
-- **type** : le type de changement (`feat`, `fix`, `chore`, `refactor`, `docs`, `test`, `style`, `ci`)
-- **scope** _(optionnel)_ : le module ou la zone impactée (`doc`, `frontend`, `backend`, `ai`, etc.)
-- **description** : résumé court en anglais de la modification
+Le backend expose une API REST documentée via Swagger, consommée par le frontend. Le module IA communique également avec le backend pour accéder aux données métier.
 
-#### Exemples
+## Installation rapide
 
-| Commit                                           | Explication                               |
-| ------------------------------------------------ | ----------------------------------------- |
-| `feat(frontend): add property search filter`     | Nouvelle fonctionnalité côté frontend     |
-| `fix(backend): resolve null pointer on login`    | Correction de bug côté backend            |
-| `chore(doc): restructure README files`           | Tâche de maintenance sur la documentation |
-| `refactor(ai): simplify data pipeline`           | Refactorisation du module IA              |
-| `docs: update installation guide`                | Mise à jour de documentation générale     |
-| `test(backend): add unit tests for auth service` | Ajout de tests                            |
+Chaque module se lance indépendamment. Se référer au README du module concerné pour les détails.
 
-### Tests
+### Backend
 
-<!-- Détailler ici la stratégie de tests globale -->
+```bash
+cd backend
+cp .env.example .env   # Renseigner les credentials PostgreSQL et JWT
+docker compose -f dc-postgresql.yml up -d   # Lancer PostgreSQL
+mvn clean install && mvn spring-boot:run
+```
 
-## Déploiement (CI/CD)
+API disponible sur `http://localhost:8080/api`  
+Swagger UI : `http://localhost:8080/api/swagger-ui/index.html`
 
-### Environnements
+### Frontend
 
-<!-- Lister les environnements (dev, staging, prod, etc.) -->
+```bash
+cd frontend
+npm install
+ng serve
+```
 
-### Pipeline
+### IA & Data
 
-<!-- Décrire le pipeline CI/CD -->
+Voir [ai/README.md](ai/README.md).
+
+## Conventions de nommage
+
+| Contexte      | Convention       |
+| ------------- | ---------------- |
+| Variables     | lowerCamelCase   |
+| Fonctions     | lowerCamelCase   |
+| Base de données | snake_case     |
+| Python        | snake_case       |
+| Commentaires  | Français         |
+
+## Tests
+
+<!-- Détailler ici la stratégie de tests globale (unitaires, intégration, e2e) -->
 
 ## Troubleshooting (Dépannage)
 
