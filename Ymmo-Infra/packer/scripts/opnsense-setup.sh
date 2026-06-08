@@ -136,6 +136,91 @@ array_unshift($config["filter"]["rule"], [
     "created"     => ["time" => (string)time(), "username" => "root@local"],
 ]);
 
+// 7. Regles pass legacy pour chaque VLAN Siege (opt1-opt4).
+//    OPNsense bloque tout trafic entrant sur les interfaces OPT par defaut.
+//    L API automation (oxlorg.opnsense.rule) cree des regles dans "Rules from Automation"
+//    qui apparaissent dans l UI mais ne sont pas evaluees si le toggle d interface
+//    n est pas actif. On bake ici les memes regles en tant que regles legacy (config.xml)
+//    pour garantir qu elles soient dans le packet filter des le premier boot.
+$vlan_pass_rules = [
+    ["opt" => "opt1", "network" => "10.0.10.0/24", "name" => "SRV_SIEGE", "tracker" => "1000000010"],
+    ["opt" => "opt2", "network" => "10.0.20.0/24", "name" => "USR_SIEGE", "tracker" => "1000000011"],
+    ["opt" => "opt3", "network" => "10.0.30.0/24", "name" => "PRT_SIEGE", "tracker" => "1000000012"],
+    ["opt" => "opt4", "network" => "10.0.99.0/24", "name" => "MGT_SIEGE", "tracker" => "1000000013"],
+];
+foreach ($vlan_pass_rules as $r) {
+    // Note : pas de cle "protocol" — omettre = tous protocoles en pf FreeBSD.
+    // "protocol" => "any" genere "proto any" qui est invalide dans pf et fait
+    // echouer silencieusement toute la compilation du ruleset.
+    $config["filter"]["rule"][] = [
+        "type"        => "pass",
+        "interface"   => $r["opt"],
+        "ipprotocol"  => "inet",
+        "statetype"   => "keep state",
+        "source"      => ["network" => $r["network"]],
+        "destination" => ["any" => ""],
+        "descr"       => "Allow-" . $r["name"] . "-to-WAN",
+        "tracker"     => $r["tracker"],
+        "created"     => ["time" => (string)time(), "username" => "root@local"],
+    ];
+}
+
+// Regle floating : backbone WireGuard (10.254.0.0/24) -> VLANs Siege (10.0.0.0/16).
+// L API OPNsense ne peut pas creer de vraies regles floating (issue #6938),
+// donc on l injecte ici directement dans config.xml via PHP.
+// "floating" => "yes" + "interface" => "" = regle evaluee sur toutes les interfaces.
+// Note : pas de cle "protocol" — "protocol" => "any" genere "proto any" invalide en pf.
+$config["filter"]["rule"][] = [
+    "type"        => "pass",
+    "interface"   => "",
+    "floating"    => "yes",
+    "direction"   => "in",
+    "quick"       => "1",
+    "ipprotocol"  => "inet",
+    "source"      => ["network" => "10.254.0.0/24"],
+    "destination" => ["network" => "10.0.0.0/16"],
+    "descr"       => "Allow-WireGuard-backbone-to-VLANs-siege",
+    "tracker"     => "1000000002",
+    "created"     => ["time" => (string)time(), "username" => "root@local"],
+];
+
+// 8. NAT outbound : mode hybride + regles explicites par VLAN Siege.
+//    L API REST OPNsense n expose pas le NAT outbound (code legacy).
+//    On injecte directement dans config.xml, comme pour la regle floating.
+//    Mode "hybrid" : les regles explicites ci-dessous s appliquent en
+//    complement des regles automatiques generees par OPNsense.
+if (!isset($config["nat"])) {
+    $config["nat"] = [];
+}
+if (!isset($config["nat"]["outbound"])) {
+    $config["nat"]["outbound"] = [];
+}
+$config["nat"]["outbound"]["mode"] = "hybrid";
+
+if (!isset($config["nat"]["outbound"]["rule"]) || !is_array($config["nat"]["outbound"]["rule"])) {
+    $config["nat"]["outbound"]["rule"] = [];
+}
+$vlan_nat = [
+    ["10.0.10.0/24", "SRV_SIEGE"],
+    ["10.0.20.0/24", "USR_SIEGE"],
+    ["10.0.30.0/24", "PRT_SIEGE"],
+    ["10.0.99.0/24", "MGT_SIEGE"],
+];
+foreach ($vlan_nat as [$subnet, $name]) {
+    $config["nat"]["outbound"]["rule"][] = [
+        "interface"       => "wan",
+        "source"          => ["network" => $subnet],
+        "destination"     => ["any" => ""],
+        "target"          => "",
+        "targetip"        => "",
+        "targetip_subnet" => "32",
+        "staticnatport"   => "0",
+        "nosync"          => "0",
+        "descr"           => "NAT-" . $name . "-to-WAN",
+        "created"         => ["time" => (string)time(), "username" => "root@local"],
+    ];
+}
+
 // 7. Pre-declaration des VLANs et interfaces OPT du Siege
 //    L API OPNsense n expose pas l assignation d interfaces (issue core#7324,
 //    fermee "not planned"). On ecrit directement dans config.xml.
@@ -181,7 +266,7 @@ foreach ($siege_vlans as $v) {
     ];
 }
 
-write_config("Packer: cles SSH root, SSH daemon, interfaces, wizard, cles API, regle WAN, VLANs Siege");
+write_config("Packer: cles SSH root, SSH daemon, interfaces, wizard, cles API, regle WAN, pass rules VLANs, floating WireGuard, NAT outbound hybrid, VLANs Siege");
 echo "config.xml sauvegarde avec succes.\n";
 '
 

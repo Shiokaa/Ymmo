@@ -1,0 +1,268 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Autounattend.xml — Réponse automatique pour Windows 11 25H2
+  Utilisé par le setup Windows pendant la phase WinPE (avant le premier démarrage).
+  Ce fichier est monté via une ISO générée par Packer (cd_files) ou pré-uploadée
+  sur Proxmox sous le label de volume "AUTOUNATTEND".
+
+  Passes couvertes :
+    - windowsPE  : langue, partition GPT/UEFI, sélection édition Pro
+    - specialize : nom de machine, fuseau horaire, contournement NRO (25H2)
+    - oobeSystem : localisation finale, compte local packer, WinRM via FirstLogon
+-->
+<unattend xmlns="urn:schemas-microsoft-com:unattend"
+          xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PASS windowsPE — s'exécute dans l'environnement de pré-installation
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <settings pass="windowsPE">
+
+    <!-- Langue et clavier pour le setup -->
+    <component name="Microsoft-Windows-International-Core-WinPE"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <SetupUILanguage>
+        <!-- Interface du setup en français -->
+        <UILanguage>fr-FR</UILanguage>
+      </SetupUILanguage>
+      <!-- Clavier AZERTY français -->
+      <InputLocale>040c:0000040c</InputLocale>
+      <SystemLocale>fr-FR</SystemLocale>
+      <UILanguage>fr-FR</UILanguage>
+      <UserLocale>fr-FR</UserLocale>
+    </component>
+
+    <!-- Configuration de l'installation Windows -->
+    <component name="Microsoft-Windows-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <!-- Acceptation du CLUF et clé générique Pro (sélection d'édition sans activation) -->
+      <UserData>
+        <AcceptEula>true</AcceptEula>
+        <ProductKey>
+          <!-- Clé générique KMS Windows 11 Pro — sélectionne l'édition Pro,
+               n'active pas Windows. À remplacer par une vraie clé en production. -->
+          <Key>W269N-WFGWX-YVC9B-4J6C9-T83GX</Key>
+        </ProductKey>
+      </UserData>
+
+      <!-- Partitionnement GPT/UEFI sur le disque 0 (SATA dans le build Packer) -->
+      <!-- Pas de DriverPaths : le disque SATA est détecté via les pilotes inbox,
+           ce qui évite la fragilité des lettres de lecteur WinPE. -->
+      <DiskConfiguration>
+        <Disk wcm:action="add">
+          <DiskID>0</DiskID>
+          <!-- Effacement complet du disque avant partitionnement -->
+          <WillWipeDisk>true</WillWipeDisk>
+          <CreatePartitions>
+            <!-- Partition 1 : EFI System Partition (ESP) -->
+            <CreatePartition wcm:action="add">
+              <Order>1</Order>
+              <Type>EFI</Type>
+              <Size>260</Size>
+            </CreatePartition>
+            <!-- Partition 2 : Microsoft Reserved Partition (MSR) -->
+            <CreatePartition wcm:action="add">
+              <Order>2</Order>
+              <Type>MSR</Type>
+              <Size>128</Size>
+            </CreatePartition>
+            <!-- Partition 3 : Partition principale Windows (occupe le reste) -->
+            <CreatePartition wcm:action="add">
+              <Order>3</Order>
+              <Type>Primary</Type>
+              <Extend>true</Extend>
+            </CreatePartition>
+          </CreatePartitions>
+          <ModifyPartitions>
+            <!-- Formater l'ESP en FAT32 (obligatoire pour le démarrage UEFI) -->
+            <ModifyPartition wcm:action="add">
+              <Order>1</Order>
+              <PartitionID>1</PartitionID>
+              <Format>FAT32</Format>
+            </ModifyPartition>
+            <!-- Partition Windows : NTFS, lettre C -->
+            <ModifyPartition wcm:action="add">
+              <Order>2</Order>
+              <PartitionID>3</PartitionID>
+              <Format>NTFS</Format>
+              <Letter>C</Letter>
+            </ModifyPartition>
+          </ModifyPartitions>
+        </Disk>
+      </DiskConfiguration>
+
+      <!-- Cible d'installation : partition 3 du disque 0 -->
+      <ImageInstall>
+        <OSImage>
+          <InstallTo>
+            <DiskID>0</DiskID>
+            <PartitionID>3</PartitionID>
+          </InstallTo>
+          <InstallToAvailablePartition>false</InstallToAvailablePartition>
+          <!-- Ne pas afficher l'interface de sélection de partition -->
+          <WillShowUI>Never</WillShowUI>
+        </OSImage>
+      </ImageInstall>
+
+    </component>
+  </settings>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PASS specialize — s'exécute après le premier redémarrage du setup
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <settings pass="specialize">
+
+    <!-- Nom de machine et fuseau horaire -->
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <!-- Nom aléatoire généré par Windows — sera personnalisé après le clone -->
+      <ComputerName>*</ComputerName>
+      <!-- Fuseau horaire Europe/Paris -->
+      <TimeZone>Romance Standard Time</TimeZone>
+    </component>
+
+    <!-- Contournement de l'obligation de connexion réseau/compte Microsoft (25H2) -->
+    <component name="Microsoft-Windows-Deployment"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <RunSynchronous>
+        <RunSynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <!-- BypassNRO = 1 : contourne l'écran "Connexion réseau requise" introduit
+               sur Windows 11 24H2/25H2 — permet de finir l'OOBE sans compte Microsoft -->
+          <Path>reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\OOBE" /v BypassNRO /t REG_DWORD /d 1 /f</Path>
+          <WillReboot>Never</WillReboot>
+        </RunSynchronousCommand>
+      </RunSynchronous>
+    </component>
+
+  </settings>
+
+  <!-- ═══════════════════════════════════════════════════════════════════════
+       PASS oobeSystem — s'exécute pendant (ou juste avant) l'OOBE
+       ═══════════════════════════════════════════════════════════════════════ -->
+  <settings pass="oobeSystem">
+
+    <!-- Localisation finale du système -->
+    <component name="Microsoft-Windows-International-Core"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+      <InputLocale>040c:0000040c</InputLocale>
+      <SystemLocale>fr-FR</SystemLocale>
+      <UILanguage>fr-FR</UILanguage>
+      <UserLocale>fr-FR</UserLocale>
+    </component>
+
+    <!-- Configuration Shell : OOBE, comptes, autologon, FirstLogon -->
+    <component name="Microsoft-Windows-Shell-Setup"
+               processorArchitecture="amd64"
+               publicKeyToken="31bf3856ad364e35"
+               language="neutral"
+               versionScope="nonSxS"
+               xmlns:wcm="http://schemas.microsoft.com/WMIConfig/2002/State">
+
+      <!-- Écrans OOBE masqués pour un démarrage automatisé sans interaction -->
+      <OOBE>
+        <HideEULAPage>true</HideEULAPage>
+        <HideOEMRegistrationScreen>true</HideOEMRegistrationScreen>
+        <HideOnlineAccountScreens>true</HideOnlineAccountScreens>
+        <HideWirelessSetupInOOBE>true</HideWirelessSetupInOOBE>
+        <!-- ProtectYourPC=3 : désactive la personnalisation automatique -->
+        <ProtectYourPC>3</ProtectYourPC>
+        <NetworkLocation>Work</NetworkLocation>
+      </OOBE>
+
+      <!-- Compte local utilisé par Packer via WinRM pendant le build -->
+      <UserAccounts>
+        <LocalAccounts>
+          <LocalAccount wcm:action="add">
+            <Name>packer</Name>
+            <DisplayName>Packer Build Account</DisplayName>
+            <Group>Administrators</Group>
+            <Password>
+              <!--
+                IMPORTANT : ce mot de passe doit correspondre exactement à la
+                variable winrm_password dans variables.pkrvars.hcl.
+                Valeur par défaut de build : Packer-Build-2026!
+                C'est un compte temporaire de build — le changer en production.
+              -->
+              <Value>Packer-Build-2026!</Value>
+              <PlainText>true</PlainText>
+            </Password>
+          </LocalAccount>
+        </LocalAccounts>
+      </UserAccounts>
+
+      <!-- Connexion automatique pour que FirstLogonCommands s'exécutent et
+           que Packer puisse se connecter via WinRM -->
+      <AutoLogon>
+        <Enabled>true</Enabled>
+        <Username>packer</Username>
+        <Password>
+          <Value>Packer-Build-2026!</Value>
+          <PlainText>true</PlainText>
+        </Password>
+        <!-- LogonCount=5 : assure plusieurs redémarrages automatiques si nécessaire -->
+        <LogonCount>5</LogonCount>
+      </AutoLogon>
+
+      <!-- Activation de WinRM dès le premier logon — requis pour Packer -->
+      <FirstLogonCommands>
+        <SynchronousCommand wcm:action="add">
+          <Order>1</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <!-- Active WinRM, autorise l'authentification Basic et le trafic non chiffré
+               (acceptables en réseau de build isolé — ne pas utiliser en production) -->
+          <CommandLine>cmd /c for %d in (D E F G H) do @if exist %d:\setup-winrm.ps1 powershell -NoProfile -ExecutionPolicy Bypass -File %d:\setup-winrm.ps1</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>2</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <!-- Installe les drivers virtio COMPLETS + l'agent invité QEMU depuis
+               l'ISO virtio (montée comme CD). Indispensable : avec qemu_agent=true,
+               Packer découvre l'IP de la VM via l'agent, mais celui-ci communique
+               avec l'hôte par un canal virtio-serial qui exige le driver vioser.
+               Le MSI qemu-ga seul installe le service sans ce driver → l'agent
+               tourne "dans le vide" et Proxmox répond "guest agent is not running".
+               virtio-win-guest-tools.exe installe vioser + l'agent d'un coup.
+               La boucle for cherche l'ISO sur les lettres de lecteur possibles car
+               la lettre attribuée n'est pas déterministe. -->
+          <CommandLine>cmd /c for %d in (D E F G H) do @if exist %d:\virtio-win-guest-tools.exe %d:\virtio-win-guest-tools.exe /install /quiet /norestart</CommandLine>
+        </SynchronousCommand>
+        <SynchronousCommand wcm:action="add">
+          <Order>3</Order>
+          <RequiresUserInput>false</RequiresUserInput>
+          <!-- Reboot après installation des drivers virtio. Sur une install fraîche,
+               le device virtio-serial n'est pas pleinement fonctionnel tant que la
+               machine n'a pas redémarré : qemu-ga démarre mais n'arrive pas à ouvrir
+               le canal (Proxmox voit "agent not running"), et un simple restart de
+               service ne suffit pas. Après reboot, le driver est actif, qemu-ga
+               (démarrage automatique) se connecte au canal, et WinRM revient propre
+               pour l'auth NTLM de Packer. -->
+          <CommandLine>cmd /c shutdown /r /t 10 /c "Reboot post-install drivers virtio (canal qemu-ga)"</CommandLine>
+        </SynchronousCommand>
+      </FirstLogonCommands>
+
+    </component>
+  </settings>
+
+</unattend>

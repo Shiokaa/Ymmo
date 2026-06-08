@@ -37,3 +37,36 @@ http_bind_address = "10.x.x.x"
 # et doivent être reportées telles quelles dans le vault Ansible
 opnsense_api_key    = "votre-api-key-hex-80-chars"
 opnsense_api_secret = "votre-api-secret-hex-80-chars"
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Windows 11 25H2 — Template VM ID 9002
+# ──────────────────────────────────────────────────────────────────────────────
+
+# Chemins des ISO sur le datastore Proxmox "local"
+# Uploader au préalable via : Datacenter > Storage > local > Upload
+windows_iso_file = "local:iso/Win11_25H2_French_x64_v2.iso"
+virtio_iso_file  = "local:iso/virtio-win-0.1.285.iso"
+
+# Identifiant de la VM et dimensionnement matériel
+windows_vm_id      = 9002
+windows_vm_cores   = 4
+windows_vm_memory  = 8192
+windows_vm_disk_size = "64G"
+
+# Pools de stockage Proxmox pour le firmware UEFI/OVMF et le vTPM 2.0
+windows_efi_storage_pool = "local-lvm"
+windows_tpm_storage_pool = "local-lvm"
+
+# ISO Autounattend PRÉ-CONSTRUITE, uploadée sur Proxmox comme les autres ISOs.
+# La générer une fois depuis le dossier packer/ :
+#   xorriso -as mkisofs -J -r -V AUTOUNATTEND -o autounattend.iso autounattend/
+# puis l'uploader (UI Proxmox > Storage > ISO Images) et indiquer son chemin ici.
+autounattend_iso_file = "Backup-Node1:iso/autounattend.iso"
+
+# Credentials WinRM utilisés pendant le build Packer
+# IMPORTANT : winrm_password doit correspondre exactement au mot de passe
+# encodé dans packer/autounattend/Autounattend.xml (champ <Password> du
+# compte "packer"). Ces credentials sont jetables et propres au build ;
+# ils ne sont pas conservés dans le template final après sysprep.
+winrm_username = "packer"
+winrm_password = "Packer-Build-2026!"

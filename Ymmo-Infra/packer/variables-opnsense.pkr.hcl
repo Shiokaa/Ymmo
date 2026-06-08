@@ -29,9 +29,9 @@ variable "opnsense_ssh_username" {
 }
 
 variable "opnsense_ssh_password" {
-  type      = string
-  sensitive = true
-  default   = "opnsense"
+  type        = string
+  sensitive   = true
+  default     = "opnsense"
   description = "Mot de passe temporaire pour le build"
 }
 
