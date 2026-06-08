@@ -5,7 +5,7 @@
 terraform {
   required_providers {
     proxmox = {
-      source  = "bpg/proxmox"
+      source = "bpg/proxmox"
     }
   }
 }
@@ -20,7 +20,10 @@ resource "proxmox_virtual_environment_file" "user_data" {
   node_name    = var.node_name
 
   source_raw {
-    data      = templatefile(var.user_data_template, var.user_data_vars)
+    # On fusionne dns_servers dans les variables du template : le cloud-init
+    # itère sur cette liste pour écrire resolv.conf (sinon templatefile échoue
+    # car la clé dns_servers est absente de user_data_vars).
+    data      = templatefile(var.user_data_template, merge(var.user_data_vars, { dns_servers = var.dns_servers }))
     file_name = "${var.vm_name}-user-data.yaml"
   }
 }
@@ -86,7 +89,7 @@ resource "proxmox_virtual_environment_vm" "this" {
       }
     }
   }
-  
+
   lifecycle {
     ignore_changes = [
       initialization[0].user_data_file_id,

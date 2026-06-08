@@ -90,6 +90,12 @@ variable "user_data_vars" {
   default     = {}
 }
 
+variable "dns_servers" {
+  description = "Liste des serveurs DNS à injecter dans resolv.conf via cloud-init"
+  type        = list(string)
+  default     = []
+}
+
 variable "snippet_datastore" {
   description = "Datastore pour les snippets"
   type        = string

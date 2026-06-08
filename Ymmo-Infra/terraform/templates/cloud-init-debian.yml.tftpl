@@ -19,9 +19,32 @@ users:
       - ${key}
 %{ endfor ~}
 
+# Résolveur DNS explicite — Proxmox cloud-init ne configure pas de nameserver
+# si l'IP est statique et qu'aucun dns_server n'est passé dans l'initialization block.
+# On écrit resolv.conf ici pour éviter les timeouts apt sur les noms DNS.
+manage_resolv_conf: true
+resolv_conf:
+  nameservers:
+%{ for ns in dns_servers ~}
+    - '${ns}'
+%{ endfor ~}
+  searchdomains:
+    - ymmo.lan
+
 # Activation des services essentiels
+# !use_pty : Debian 12 active "Defaults use_pty" dans sudoers par défaut,
+# ce qui empêche Ansible d'escalader via sudo avec pipelining activé.
 runcmd:
   - systemctl enable qemu-guest-agent
   - systemctl start qemu-guest-agent
+  # Ansible + Defaults use_pty (Debian 12) = timeout privilege escalation.
+  # On crée un fichier dédié dans sudoers.d pour désactiver les contraintes TTY
+  # uniquement pour sysadmin, sans toucher à la sécurité globale de sudo.
+  - printf 'Defaults:sysadmin !requiretty\nDefaults:sysadmin !use_pty\n' > /etc/sudoers.d/ansible
+  - chmod 440 /etc/sudoers.d/ansible
+  # Résolution locale du hostname pour éviter les timeouts DNS lors des appels sudo
+  # (sudo résout son propre hostname à chaque invocation, ce qui peut dépasser
+  # le timeout de privilege escalation d'Ansible si le DNS n'est pas encore configuré).
+  - echo "127.0.1.1 ${hostname}.ymmo.lan ${hostname}" >> /etc/hosts
 
 final_message: "Le système est prêt après $UPTIME secondes"

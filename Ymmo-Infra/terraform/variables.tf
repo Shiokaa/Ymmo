@@ -5,7 +5,7 @@
 variable "proxmox_api_url" {
   type        = string
   description = "URL de l'API Proxmox (ex: https://proxmox:8006/api2/json)"
-  
+
   validation {
     condition     = can(regex("^https://", var.proxmox_api_url))
     error_message = "L'URL de l'API Proxmox doit obligatoirement commencer par https://"
