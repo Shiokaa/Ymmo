@@ -1,95 +1,127 @@
-# Pipeline IaC OPNsense — De Packer à Ansible
+# Pipeline IaC OPNsense — Packer vers Ansible
 
-> **Note** : Ce document remplace `opnsense-ansible.md` qui référençait l'ancienne
-> collection `ansibleguy.opnsense` (renommée `oxlorg.opnsense` en septembre 2024)
-> et une approche d'inventaire statique abandonnée.
+Ce document décrit le pipeline complet de déploiement d'OPNsense dans l'infrastructure
+Ymmo : ce qui est configuré lors du build Packer, ce qui est délégué à Ansible, et
+les raisons techniques de cette séparation.
 
 ---
 
 ## Vue d'ensemble
 
-OPNsense est piloté entièrement en IaC selon ce pipeline :
-
 ```
-1. Packer          → Build du template OPNsense sur Proxmox
-                      - Credentials API injectés dans config.xml
-                      - Règle firewall WAN (port 443) baked dans le template
-
-2. Terraform       → Clone du template, déploiement de la VM
-
-3. Inventaire      → Découverte automatique de l'IP WAN via le plugin Proxmox
-   Dynamique         (QEMU guest agent → vtnet1 → IP WAN)
-
-4. Ansible         → Configuration déclarative via l'API REST OPNsense
-                      (collection oxlorg.opnsense, connection: local)
+Packer
+  build du template OPNsense (ID 9001) sur Proxmox
+  - interfaces physiques assignées dans config.xml
+  - VLANs pré-déclarés dans config.xml
+  - credentials API baked dans le template
+  - règles firewall et NAT outbound injectées directement
+        |
+        v
+Terraform
+  clone du template 9001
+  déploiement de la VM OPNsense-Master
+        |
+        v
+Inventaire dynamique Proxmox
+  découverte automatique de l'IP WAN via QEMU guest agent
+  groupe tag_router créé automatiquement
+        |
+        v
+Ansible — opnsense_setup
+  vérification de la connectivité SSH brute (bootstrap)
+        |
+        v
+Ansible — opnsense_network
+  déclaration des devices VLAN via API REST
+  configuration DHCP Dnsmasq via API REST
+  création des règles firewall via API REST
 ```
+
+Le principe central est le suivant : tout ce que l'API OPNsense ne permet pas de
+configurer (assignation d'interfaces, NAT outbound, règles floating) est injecté
+directement dans `config.xml` lors du build Packer. Ansible ne prend en charge que
+ce que l'API REST expose de façon fiable.
 
 ---
 
-## Prérequis
+## Contrainte fondamentale : OPNsense sans Python
 
-- Proxmox opérationnel avec un token API valide
-- ISO OPNsense 26.1 uploadée sur Proxmox
-- Environnement Python/Ansible configuré (`.venv` + `requirements.txt`)
-- Variables d'environnement Proxmox exportées :
-  ```bash
-  export PROXMOX_URL="https://192.168.10.x:8006"
-  export PROXMOX_USER="user@pam"
-  export PROXMOX_TOKEN_ID="token-id"
-  export PROXMOX_TOKEN_SECRET="token-secret"
-  ```
+OPNsense tourne sur FreeBSD et n'embarque pas Python. Les modules Ansible standards
+qui reposent sur SSH + exécution Python à distance sont donc inutilisables pour la
+configuration réseau.
+
+La collection `oxlorg.opnsense` (pinned à la version `25.7.8`) contourne cette
+contrainte : elle s'exécute en `connection: local` sur le contrôleur Ansible et
+envoie des requêtes HTTPS vers l'API REST OPNsense. Il n'y a pas de connexion SSH
+pour les tâches réseau. `gather_facts: false` est obligatoire dans les deux playbooks
+pour la même raison.
+
+Le playbook `opnsense_setup` comporte un rôle `opnsense_bootstrap` qui vérifie la
+connectivité SSH brute (via `ansible.builtin.raw`) — c'est la seule tâche qui utilise
+SSH, et uniquement pour confirmer que la VM répond avant la configuration API.
 
 ---
 
-## Étape 1 — Packer : build du template OPNsense
+## Étape 1 — Packer : ce qui est baked dans le template
 
-### Ce qui est baked dans le template
+### Pourquoi Packer et non Ansible
 
-Le script `packer/scripts/opnsense-setup.sh` configure `config.xml` via l'API PHP
-interne d'OPNsense (`write_config()`) pendant le build. Il injecte :
+Plusieurs éléments de configuration OPNsense ne sont pas exposés par l'API REST.
+La seule méthode fiable pour les initialiser est d'écrire directement dans
+`config.xml` lors du build du template, via le script `packer/scripts/opnsense-setup.sh`.
+Ce script utilise l'API PHP interne d'OPNsense (`write_config()`), disponible
+uniquement depuis la VM elle-même pendant le build.
 
-| Élément | Détail |
-|---------|--------|
-| Clés SSH root | Permet la connexion SSH post-déploiement |
-| Interface LAN | vtnet0 → 192.168.1.1/24 (statique) |
-| Interface WAN | vtnet1 → DHCP |
-| Credentials API | Clé + secret (hashé SHA-512) dans `<apikeys>` du user root |
-| Règle firewall WAN | `pass in on vtnet1 proto tcp from any to (self) port 443` |
-| Plugin QEMU agent | `os-qemu-guest-agent` installé et activé |
+Une fois le template créé, toutes les VMs clonées depuis ce template héritent de
+cette configuration de base. Ansible n'a donc pas à gérer ces éléments.
 
-> **Pourquoi injecter les credentials dans Packer ?**
-> OPNsense ne supporte pas cloud-init. La seule méthode fiable pour pré-configurer
-> une VM clonée est de baked la configuration dans le template via `config.xml`.
-> Sans ça, Ansible n'aurait aucun moyen de s'authentifier à l'API au premier boot.
+### Ce que opnsense-setup.sh configure
 
-> **Pourquoi la règle firewall WAN ?**
-> OPNsense bloque tout le trafic entrant sur le WAN par défaut. La règle permet
-> à Ansible (qui tourne sur le contrôleur, hors du LAN OPNsense) de joindre l'API
-> HTTPS sur le port 443.
+| Section | Contenu | Raison de le baker dans Packer |
+|---------|---------|-------------------------------|
+| Interfaces physiques | vtnet0 → LAN (192.168.1.1/24), vtnet1 → WAN (DHCP) | L'API ne permet pas d'assigner des interfaces à des slots OPT (issue upstream core#7324, fermée "not planned") |
+| Credentials API | Clé + secret hashé SHA-512 dans `<apikeys>` du user root | OPNsense ne supporte pas cloud-init ; sans credentials baked, Ansible n'a aucun moyen de s'authentifier au premier boot |
+| Clé SSH root | Ajoutée dans `config.xml` | Même raison : pas de cloud-init, la clé doit être présente avant le premier démarrage |
+| Plugin QEMU guest agent | `os-qemu-guest-agent` installé et activé | Requis pour que Proxmox expose les interfaces réseau de la VM, ce qui permet à l'inventaire dynamique de découvrir l'IP WAN |
+| Règle firewall WAN (port 443) | `pass in on vtnet1 proto tcp from any to (self) port 443` | OPNsense bloque tout le trafic entrant sur le WAN par défaut. Sans cette règle, Ansible ne peut pas joindre l'API depuis le contrôleur |
+| NAT outbound | Mode hybrid + règles explicites par VLAN | L'API REST (`/api/firewall/nat/outbound/*`) n'est pas exposée : le code NAT outbound reste dans le legacy PHP et renvoie 404 sur tous les endpoints MVC testés (`search_rule`, `addRule`, etc.). La seule option est l'injection PHP dans `config.xml` |
+| Règles floating | Règles inter-VLAN de base | L'API OPNsense ne peut pas créer de règles floating (issue #6938). Elles doivent être écrites directement dans `config.xml` |
+| Règles VLAN legacy | Règles de filtrage de base | Le champ `protocol` dans les règles `pf` n'accepte pas la valeur `any` via l'API dans ce contexte ; le champ doit être omis, ce qui n'est possible qu'en écrivant directement dans `config.xml` |
+| Pré-déclaration des VLANs | 4 entrées `<vlan>` + 4 interfaces OPT dans `config.xml` | L'API ne peut pas assigner des interfaces VLAN à des slots OPT. Ansible peut ensuite déclarer les devices VLAN via l'API, mais uniquement parce que les slots OPT sont déjà présents dans `config.xml` |
 
-### Variables requises
+### Variables requises dans Packer
 
-Ajouter dans `packer/variables.pkrvars.hcl` :
+Les credentials API doivent être définis dans `packer/variables.pkrvars.hcl` :
 
 ```hcl
 # Générer avec : openssl rand -hex 40
-opnsense_api_key    = "votre-cle-hex-80-chars"
-opnsense_api_secret = "votre-secret-hex-80-chars"
+opnsense_api_key    = "valeur-hex-80-caracteres"
+opnsense_api_secret = "valeur-hex-80-caracteres"
 ```
 
-### Commande de build
+Ces valeurs doivent être identiques à celles stockées dans le vault Ansible.
+OPNsense stocke le hash du secret dans `config.xml` ; Ansible utilise la valeur
+en clair pour s'authentifier.
+
+### Build du template
 
 ```bash
 make build-opnsense
 ```
 
-### Validation post-build
+La commande exécute un `packer init` suivi d'un `packer build`. À la fin du build,
+le script vérifie automatiquement la disponibilité de l'API :
 
-À la fin du build, le script exécute automatiquement :
 ```bash
-curl -k -u "${OPN_API_KEY}:${OPN_API_SECRET}" https://127.0.0.1/api/core/firmware/status
+curl -k -u "${OPN_API_KEY}:${OPN_API_SECRET}" \
+  https://127.0.0.1/api/core/firmware/status
 ```
+
 Un retour HTTP 200 confirme que les credentials sont valides dans le template.
+
+Tout changement dans `opnsense-setup.sh` nécessite un rebuild complet (`make build-opnsense`)
+suivi d'un redéploiement Terraform (`make tf-apply`) pour recréer la VM depuis le
+nouveau template.
 
 ---
 
@@ -100,126 +132,97 @@ make tf-apply
 ```
 
 Terraform clone le template `9001` et crée la VM `OPNsense-Master` avec :
+
 - **vtnet0** connecté au bridge interne (`YmmoTom`)
 - **vtnet1** connecté au bridge WAN (`vmbr0`)
-- Tags Proxmox : `ymmotom`, `infra`, `router`
+- Tags Proxmox : `ymmotom`, `infra`, `router` (le tag `router` crée le groupe `tag_router` dans l'inventaire)
 
 ---
 
 ## Étape 3 — Inventaire dynamique Proxmox
 
-### Fonctionnement
+L'inventaire dynamique (`ansible/inventory/proxmox.proxmox.yml`) interroge l'API
+Proxmox via le plugin `community.proxmox.proxmox`. Il filtre les VMs taguées
+`ymmotom` et crée automatiquement des groupes basés sur les tags Proxmox. La VM
+`OPNsense-Master`, taguée `router`, apparaît dans le groupe `tag_router`.
 
-L'inventaire dynamique (`inventory/proxmox.proxmox.yml`) interroge l'API Proxmox
-et filtre les VMs taguées `ymmotom`. Il crée automatiquement des groupes basés sur
-les tags, dont le groupe `tag_router` qui contient `OPNsense-Master`.
+L'IP de l'hôte est résolue dynamiquement à partir des interfaces exposées par le
+QEMU guest agent (installé par Packer). La règle `compose` de l'inventaire filtre
+l'interface WAN (`vtnet1`) et exclut les adresses locales et l'IP LAN statique.
+Aucune IP n'est hardcodée.
 
-La règle `compose` extrait l'IP WAN automatiquement :
-```yaml
-compose:
-  ansible_host: >
-    proxmox_agent_interfaces |
-    selectattr('name', 'in', ['vtnet1']) |
-    map(attribute='ip-addresses') | flatten |
-    reject('match', '^192\.168\.1\.') |   # exclut l'IP LAN statique
-    first | split('/') | first
-```
+Les variables de connexion du groupe `tag_router` sont définies dans
+`ansible/inventory/group_vars/tag_router/main.yml` :
 
-> Grâce au QEMU guest agent (installé par Packer), Proxmox expose les interfaces
-> réseau de la VM. L'IP WAN (vtnet1, DHCP) est récupérée dynamiquement à chaque
-> run — aucune IP hardcodée dans l'inventaire.
+| Variable | Valeur | Rôle |
+|----------|--------|------|
+| `ansible_connection` | `local` | Pas de SSH pour la configuration OPNsense — les modules API s'exécutent sur le contrôleur |
+| `opnsense_api_key` | `{{ vault_opnsense_api_key }}` | Clé API chargée depuis le vault |
+| `opnsense_api_secret` | `{{ vault_opnsense_api_secret }}` | Secret API en clair (non hashé) |
+| `opnsense_api_host` | `{{ ansible_host }}` | IP WAN résolue dynamiquement par l'inventaire |
+| `opnsense_ssl_verify` | `false` | Certificat auto-signé acceptable en homelab |
+| `wireguard_server_private_key` | `{{ vault_wireguard_server_private_key }}` | Clé privée WireGuard du hub siège |
 
-### Vérification
+### Vérification de l'inventaire
 
 ```bash
 cd ansible
-# Vérifier que OPNsense-Master est dans tag_router avec la bonne IP
 ansible-inventory --host OPNsense-Master --ask-vault-pass
-```
-
-La sortie doit contenir :
-```json
-{
-    "ansible_connection": "local",
-    "ansible_host": "192.168.10.x",
-    ...
-}
 ```
 
 ---
 
-## Étape 4 — Ansible : configuration via API REST
+## Étape 4 — Ansible : opnsense_setup
 
-### Architecture de connexion
+Le playbook `ansible/playbooks/opnsense_setup.yml` applique le rôle
+`opnsense_bootstrap`. Ce rôle se limite à une vérification de connectivité SSH
+brute via `ansible.builtin.raw`. Il ne configure rien : la configuration initiale
+(credentials, interfaces, firewall) a déjà été réalisée par Packer.
 
-```
-Contrôleur Ansible (ta machine)
-        │
-        │ HTTPS (connection: local)
-        ▼
-OPNsense API (192.168.10.x:443)
-        │
-        ▼
-   config.xml / daemon reload
-```
-
-`connection: local` signifie qu'Ansible s'exécute localement et envoie des requêtes
-HTTPS vers l'API OPNsense. Il n'y a pas de SSH vers OPNsense pour la configuration.
-
-### Collection requise
-
-```bash
-cd ansible
-ansible-galaxy collection install -r collections/requirements.yml
-```
-
-Contenu de `collections/requirements.yml` :
-```yaml
-collections:
-  - name: oxlorg.opnsense
-```
-
-> **Important** : la collection s'appelait `ansibleguy.opnsense` jusqu'en septembre
-> 2024. Elle a été renommée `oxlorg.opnsense`. L'ancien namespace ne doit plus être
-> utilisé.
-
-### Vault Ansible
-
-Les credentials API sont stockés dans `inventory/group_vars/all/vault.yml`,
-chiffré avec Ansible Vault :
-
-```bash
-# Chiffrer le vault (première fois)
-ansible-vault encrypt inventory/group_vars/all/vault.yml
-
-# Éditer le vault
-ansible-vault edit inventory/group_vars/all/vault.yml
-```
-
-Contenu attendu :
-```yaml
-vault_opnsense_api_key: "la-même-valeur-que-dans-packer"
-vault_opnsense_api_secret: "la-même-valeur-brute-que-dans-packer"
-```
-
-### Variables de groupe (`group_vars/tag_router/main.yml`)
-
-Ces variables sont automatiquement appliquées à tous les hôtes du groupe `tag_router` :
-
-```yaml
-ansible_connection: local          # API REST, pas SSH
-opnsense_api_key: "{{ vault_opnsense_api_key }}"
-opnsense_api_secret: "{{ vault_opnsense_api_secret }}"
-opnsense_api_host: "{{ ansible_host }}"   # IP WAN résolue dynamiquement
-opnsense_ssl_verify: false               # certificat auto-signé (homelab)
-```
-
-### Exécution du playbook
+Ce playbook est à exécuter une seule fois après le premier démarrage de la VM,
+pour confirmer que la VM est accessible avant de passer à `opnsense_network`.
 
 ```bash
 cd ansible
 ansible-playbook -i inventory/ playbooks/opnsense_setup.yml --ask-vault-pass
 ```
+
+---
+
+## Étape 5 — Ansible : opnsense_network
+
+Le playbook `ansible/playbooks/opnsense_network.yml` applique le rôle
+`opnsense_network`. Il configure via l'API REST :
+
+- les devices VLAN (`vlan0.10`, `vlan0.20`, `vlan0.30`, `vlan0.99`)
+- les plages DHCP Dnsmasq par VLAN
+- les règles firewall autorisant chaque VLAN à sortir vers WAN
+
+Ce rôle est documenté en détail dans `docs/ansible/opnsense-network.md`.
+
+```bash
+cd ansible
+ansible-playbook -i inventory/ playbooks/opnsense_network.yml --ask-vault-pass
+```
+
+---
+
+## Résumé de la séparation Packer / Ansible
+
+| Élément | Géré par | Raison |
+|---------|----------|--------|
+| Assignation interfaces physiques (LAN/WAN) | Packer | API core#7324 inexistante |
+| Pré-déclaration interfaces OPT et VLANs | Packer | API core#7324 inexistante |
+| Credentials API OPNsense | Packer | Pas de cloud-init sur OPNsense |
+| Clé SSH root | Packer | Pas de cloud-init sur OPNsense |
+| QEMU guest agent | Packer | Requis avant le démarrage de la VM |
+| Règle firewall WAN (port 443) | Packer | Requis avant qu'Ansible puisse joindre l'API |
+| NAT outbound | Packer | API REST NAT outbound inexistante (legacy PHP) |
+| Règles floating | Packer | API ne peut pas créer de règles floating (issue #6938) |
+| Règles VLAN legacy | Packer | Champ `proto any` invalide en pf via API |
+| Devices VLAN | Ansible (oxlorg.opnsense) | API `interface_vlan` disponible et fiable |
+| Plages DHCP Dnsmasq | Ansible (oxlorg.opnsense) | API `dnsmasq_range` disponible |
+| Règles firewall VLAN-to-WAN | Ansible (oxlorg.opnsense) | API `rule` disponible et idempotente |
 
 ---
 
@@ -229,30 +232,33 @@ ansible-playbook -i inventory/ playbooks/opnsense_setup.yml --ask-vault-pass
 # 1. Générer les credentials API
 API_KEY=$(openssl rand -hex 40)
 API_SECRET=$(openssl rand -hex 40)
-echo "api_key: $API_KEY"
-echo "api_secret: $API_SECRET"
 
-# 2. Ajouter dans packer/variables.pkrvars.hcl
+# 2. Ajouter dans packer/variables.pkrvars.hcl :
 #    opnsense_api_key    = "$API_KEY"
 #    opnsense_api_secret = "$API_SECRET"
 
-# 3. Construire le template
+# 3. Construire le template Packer
 make build-opnsense
 
-# 4. Déployer la VM
+# 4. Déployer la VM via Terraform
 make tf-apply
 
-# 5. Mettre à jour le vault Ansible avec les mêmes valeurs
+# 5. Mettre à jour le vault Ansible (mêmes valeurs que Packer)
 ansible-vault edit ansible/inventory/group_vars/all/vault.yml
+# vault_opnsense_api_key: "$API_KEY"
+# vault_opnsense_api_secret: "$API_SECRET"
 
-# 6. Installer la collection
+# 6. Installer la collection oxlorg.opnsense
 cd ansible && ansible-galaxy collection install -r collections/requirements.yml
 
-# 7. Vérifier l'inventaire
+# 7. Vérifier que OPNsense-Master apparaît dans l'inventaire avec la bonne IP
 ansible-inventory --host OPNsense-Master --ask-vault-pass
 
-# 8. Lancer le playbook
+# 8. Bootstrap : confirmer la connectivité SSH
 ansible-playbook -i inventory/ playbooks/opnsense_setup.yml --ask-vault-pass
+
+# 9. Configurer le réseau via API
+ansible-playbook -i inventory/ playbooks/opnsense_network.yml --ask-vault-pass
 ```
 
 ---
@@ -261,7 +267,8 @@ ansible-playbook -i inventory/ playbooks/opnsense_setup.yml --ask-vault-pass
 
 | Point | Détail |
 |-------|--------|
-| IP WAN dynamique | L'IP change à chaque redéploiement (DHCP). L'inventaire dynamique la résout automatiquement. Aucune action manuelle requise. |
-| Même credentials dans Packer et Vault | La valeur dans `vault_opnsense_api_secret` doit être le secret **en clair** (pas le hash). OPNsense stocke le hash dans `config.xml`, Ansible utilise la valeur brute pour s'authentifier. |
-| Rebuild template | Tout changement dans `opnsense-setup.sh` nécessite un `make build-opnsense` suivi d'un `make tf-apply` pour recréer la VM depuis le nouveau template. |
-| `ssl_verify: false` | Acceptable en homelab. En production, déployer une CA interne et utiliser `ca_path`. |
+| Credentials identiques dans Packer et Vault | La valeur dans `vault_opnsense_api_secret` doit être le secret en clair. OPNsense stocke le hash SHA-512 dans `config.xml` et s'en charge lui-même. Ne pas pré-hasher la valeur côté Ansible. |
+| IP WAN dynamique | L'IP change à chaque redéploiement (DHCP). L'inventaire dynamique la résout automatiquement via le QEMU guest agent. Aucune action manuelle requise. |
+| Rebuild template | Tout changement dans `opnsense-setup.sh` nécessite `make build-opnsense` puis `make tf-apply` pour recréer la VM depuis le nouveau template. Les modifications Ansible seules ne suffisent pas pour les éléments baked. |
+| `ssl_verify: false` | Acceptable en homelab avec certificat auto-signé. En production, déployer une CA interne et passer `opnsense_ssl_verify: true` avec un `ca_path` valide. |
+| Collection `oxlorg.opnsense` | Anciennement `ansibleguy.opnsense` jusqu'en septembre 2024. L'ancien namespace ne doit plus être utilisé. La version est pinned à `25.7.8` dans `ansible/collections/requirements.yml`. |

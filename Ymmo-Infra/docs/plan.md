@@ -1,235 +1,223 @@
-# Plan d'Architecture Infrastructure
-
-## Vue d'ensemble
-
-Ce document décrit l'architecture complète de l'infrastructure, couvrant le provisioning automatisé, le cœur réseau, la gestion des identités, la stack applicative et la configuration post-déploiement.
+# Plan d'Architecture Infrastructure Ymmo
 
 ---
 
-## 1. Fondations de l'Infrastructure (Provisioning)
+## 1. Vue d'ensemble
 
-### Templates — Packer
+L'infrastructure Ymmo repose sur un pipeline IaC en trois phases séquentielles :
 
-Les images de base sont construites automatiquement via **Packer**, garantissant que toutes les VM partent d'une base saine et identique.
-
-- Template **Debian** (serveurs applicatifs, DNS, DHCP, Samba)
-- Template **OPNsense** (routeur/pare-feu)
-
-### Déploiement — Terraform + Provider Proxmox
-
-Terraform clone les templates Packer pour instancier l'infrastructure complète :
-
-| Composant   | Quantité | Rôle                             |
-| ----------- | -------- | -------------------------------- |
-| VM OPNsense | 1        | Routeur principal                |
-| VM Serveurs | N        | Hébergement siège                |
-| VM Agences  | 12       | Simulation des agences distantes |
-
----
-
-## 2. Cœur de Réseau
-
-### Routeur / Pare-feu — OPNsense
-
-Solution robuste et hautement configurable. L'API intégrée permet une automatisation via Ansible.
-
-### VPN Site-à-Site — WireGuard (plugin OPNsense)
-
-Tunnels sécurisés entre le siège et les 12 agences.
-
-> Choix justifié : WireGuard est plus performant qu'IPSec et nettement plus simple à scripter.
-
-### DNS — PowerDNS
-
-Solution entreprise adossée à une base de données, permettant la gestion des zones DNS via l'IaC (API + Ansible).
-
-### DHCP — Dnsmasq (intégré à OPNsense)
-
-> Le choix définitif s'est porté sur **Dnsmasq** (en remplacement de Kea DHCP qui est désormais considéré comme obsolète pour notre cas d'usage).
-
-**Dnsmasq** est le standard retenu pour ce projet :
-
-- **Garantit la résolution DNS dynamique** de manière fiable sur OPNsense 26.1.
-- Simplifie l'intégration entre le service DHCP et le DNS interne.
-- Extrêmement léger et nativement supporté par OPNsense.
-
----
-
-## 3. Gestion des Identités et des Fichiers
-
-> Le cahier des charges exige Active Directory et GPO. L'alternative 100% Linux retenue est **Samba4 en mode AD DC** — le seul remplacement transparent production-ready.
-
-### Annuaire — Samba4 (Active Directory Domain Controller)
-
-Samba4 intègre un contrôleur de domaine complet, compatible avec les protocoles Microsoft :
-
-- **LDAP** + **Kerberos** natifs
-- Authentification centralisée des utilisateurs sur l'ensemble de l'infrastructure
-- Compatible avec les GPO et les clients Windows/Linux
-
-### Serveur de Fichiers — Samba (membre du domaine)
-
-Gestion des partages et des droits via les **ACL POSIX**, appliquées de manière déclarative par Ansible :
-
-| Pôle         | Droits                              |
-| ------------ | ----------------------------------- |
-| Direction    | Lecture / Écriture                  |
-| Autres pôles | Accès restreint (interdits croisés) |
-
----
-
-## 4. Stack Applicative — Plateforme Ymmo
-
-L'application de gestion des transactions immobilières et d'analyse de données est hébergée sur les serveurs Debian.
-
-### Conteneurisation — Docker & Docker Compose
-
-| Service         | Technologie      |
-| --------------- | ---------------- |
-| Backend         | Java Spring Boot |
-| Frontend        | Angular          |
-| Base de données | PostgreSQL       |
-
-### Reverse Proxy — Nginx / Traefik
-
-Placé devant les conteneurs pour assurer :
-
-- Routage **HTTP/HTTPS**
-- Gestion des **certificats SSL**
-- Terminaison TLS
-
----
-
-## 5. Configuration Post-Déploiement — Ansible
-
-Une fois les VM provisionnées par Terraform, Ansible prend le relais de façon **idempotente**.
-
-### Périmètre d'action
-
-```none
-Terraform (VM UP)
-│
-▼
+```
+Packer
+  Construit deux templates VM reproductibles sur Proxmox.
+  Garantit que toutes les VMs partent d'une base identique et durcie.
+        |
+        v
+Terraform
+  Clone les templates pour instancier l'ensemble des VMs.
+  Injecte la configuration réseau et les clés SSH via Cloud-init.
+        |
+        v
 Ansible
-├── Serveurs applicatifs
-│   ├── Installation de Docker
-│   └── Déploiement docker-compose.yml + démarrage des services
-├── Annuaire & Fichiers
-│   ├── Configuration Samba4 (AD DC)
-│   ├── Configuration Samba (serveur membre)
-│   └── Application des ACL POSIX
-└── Réseau
-├── Configuration PowerDNS
-├── Configuration Dnsmasq
-└── Règles OPNsense (API / modules Ansible)
+  Configure les services sur les VMs déployées.
+  Idempotent — peut être rejoué sans effet de bord.
 ```
 
+La topologie cible couvre un siège social et jusqu'à 12 agences distantes, interconnectés par des tunnels WireGuard site-à-site. Le périmètre déployé en démo comprend le siège et deux agences.
+
 ---
 
-## Stack Technologique — Récapitulatif
+## 2. Topologie réseau
 
-| Couche        | Outil                   | Rôle                         |
-| ------------- | ----------------------- | ---------------------------- |
-| Build images  | Packer                  | Templates VM reproductibles  |
-| IaC           | Terraform + bpg/proxmox | Provisioning des VM          |
-| Réseau        | OPNsense                | Routage, pare-feu, DHCP      |
-| VPN           | WireGuard               | Tunnels site-à-site          |
-| DNS           | PowerDNS                | Résolution interne           |
-| DHCP          | Dnsmasq                 | Attribution d'adresses et DNS dynamique |
-| Identités     | Samba4 AD DC            | Authentification centralisée |
-| Fichiers      | Samba + ACL POSIX       | Partages et droits           |
-| Conteneurs    | Docker + Compose        | Runtime applicatif           |
-| Reverse Proxy | Nginx / Traefik         | Routage HTTP/S, TLS          |
-| Config Mgmt   | Ansible                 | Post-déploiement idempotent  |
+### 2.1 Segmentation par site
 
-## 6. Plan d'Adressage IP et Segmentation Réseau (VLANs)
-
-L'adressage de l'infrastructure Ymmo repose sur le bloc privé `10.0.0.0/8` (RFC 1918). La segmentation suit une logique hiérarchique à trois niveaux encodée directement dans l'IP :
+L'adressage suit la convention `10.[site_id].[vlan].[hôte]`. Cette lisibilité directe dans l'IP facilite l'écriture des règles de firewall et la supervision.
 
 ```
-10. [Site] . [Fonction] . [Hôte]
-     │           │           └─ Identifiant de l'équipement (1–253)
-     │           └─────────── VLAN / rôle fonctionnel
-     └─────────────────────── Identifiant du site (0 = Siège, 1–12 = Agences)
+10. [site_id] . [vlan] . [hôte]
+     |            |         |
+     |            |         Identifiant de l'équipement (1–253)
+     |            Fonction réseau (10=SRV, 20=USR, 30=PRT, 99=MGT)
+     Identifiant du site (0=Siège, 1–12=Agences)
 ```
 
-Cette convention rend le plan d'adressage **auto-documenté** : à la simple lecture d'une IP, on identifie immédiatement le site et la fonction de l'équipement. Elle facilite également l'écriture des règles de pare-feu (filtrage par octet) et la supervision.
+### 2.2 Siège — Site 0 (`10.0.0.0/16`)
+
+| VLAN | Nom | Réseau | Passerelle | Contenu |
+|---|---|---|---|---|
+| 10 | SRV_SIEGE | `10.0.10.0/24` | `10.0.10.254` | Samba4-DC1, serveur applicatif Ymmo, DNS interne |
+| 20 | USR_SIEGE | `10.0.20.0/24` | `10.0.20.254` | Postes de travail (~30 utilisateurs) |
+| 30 | PRT_SIEGE | `10.0.30.0/24` | `10.0.30.254` | Imprimantes (isolé, aucune communication inter-VLAN) |
+| 99 | MGT_SIEGE | `10.0.99.0/24` | `10.0.99.254` | Administration — seul réseau autorisé à atteindre l'infra |
+
+Adresses fixes dans le VLAN SRV (10) :
+
+| IP | Machine | Rôle |
+|---|---|---|
+| `10.0.10.1` | Samba4-DC1 | Contrôleur de domaine Active Directory |
+| `10.0.10.254` | OPNsense (interface VLAN 10) | Passerelle du VLAN SRV |
+
+### 2.3 Agences — Sites 1 à 12 (`10.N.0.0/16`)
+
+Chaque agence compte ~5 postes commerciaux et une imprimante. Deux VLANs par site, numérotés de façon identique au siège pour la cohérence des règles de filtrage.
+
+| VLAN | Nom | Réseau (Agence N) | Passerelle |
+|---|---|---|---|
+| 20 | USR_AGENCE | `10.N.20.0/24` | `10.N.20.254` |
+| 30 | PRT_AGENCE | `10.N.30.0/24` | `10.N.30.254` |
+
+Périmètre déployé : Agences 01 et 02. Agences 03–12 : plages réservées, non instanciées.
+
+### 2.4 Backbone VPN WireGuard (`10.254.0.0/24`)
+
+Réseau de transport dédié aux tunnels site-à-site, hors des plages de sites pour éviter tout chevauchement.
+
+| IP tunnel | Peer | Rôle |
+|---|---|---|
+| `10.254.0.1` | OPNsense-Master | Concentrateur VPN siège |
+| `10.254.0.2` | Bastion | Jump host Ansible (accès aux VLANs internes) |
+| `10.254.0.11` | Agence-01 | Endpoint agence 01 |
+| `10.254.0.12` | Agence-02 | Endpoint agence 02 |
+| `10.254.0.1N` | Agence-0N | Endpoint agence N (pattern pour les agences 03–12) |
+
+WireGuard est préféré à IPSec : performances supérieures, configuration déclarative plus simple à scripter via l'API OPNsense.
+
+### 2.5 Interfaces réseau Proxmox
+
+| Bridge Proxmox | Rôle |
+|---|---|
+| `vmbr0` | WAN — connectivité externe (192.168.10.0/24) |
+| `YmmoTom` | LAN interne — tronc VLAN taggé (VLANs 10, 20, 30, 99) |
+
+OPNsense-Master est connecté aux deux bridges. Les autres VMs internes n'ont qu'une interface sur `YmmoTom` avec un VLAN ID configuré.
 
 ---
 
-### 6.1. Siège Social (Aix-en-Provence) — Site `0`
+## 3. Flux de déploiement
 
-**Périmètre :** \~30 postes de travail, 2 serveurs physiques, 1 imprimante. **Préfixe de site :** `10.0.X.X`
+### Phase 1 — Packer : construction des templates
 
-|  VLAN  | Nom         | Plage / Masque | Capacité  | Équipements / Rôle                                      | Passerelle    |
-| :----: | :---------- | :------------- | :-------: | :------------------------------------------------------ | :------------ |
-| **10** | `SRV_SIEGE` | `10.0.10.0/24` | 253 hôtes | Serveurs : Proxmox, Debian, Samba4 AD DC, PowerDNS, Dnsmasq | `10.0.10.254` |
-| **20** | `USR_SIEGE` | `10.0.20.0/24` | 253 hôtes | Postes de travail utilisateurs (\~30)                   | `10.0.20.254` |
-| **30** | `PRT_SIEGE` | `10.0.30.0/24` | 253 hôtes | Périphériques d'impression (isolation réseau)           | `10.0.30.254` |
-| **99** | `MGT_SIEGE` | `10.0.99.0/24` | 253 hôtes | Management : accès administrateur à l'infra             | `10.0.99.254` |
+Deux templates sont construits et stockés comme templates Proxmox :
 
-> **Règle de sécurité :** Le VLAN `MGT_SIEGE` (99) est strictement isolé. Seules les IP de ce sous-réseau sont autorisées à initier des connexions SSH/HTTPS vers les équipements d'infrastructure. Le VLAN `PRT_SIEGE` (30) ne peut communiquer qu'avec les serveurs d'impression — aucune connexion inter-VLAN n'est permise par défaut.
+**Template Debian 12 (ID 9000)**
+- Fichier : `packer/debian-12.pkr.hcl`
+- Installation automatisée via `packer/http/preseed.cfg`
+- 4 scripts de provisioning : mise à jour → durcissement → cloud-init → nettoyage
+- Utilisé par : Bastion, Samba4-DC1, Agence-01, Agence-02
 
-**Adresses réservées remarquables :**
+**Template OPNsense (ID 9001)**
+- Fichier : `packer/opnsense.pkr.hcl`
+- Basé sur FreeBSD, un seul script de setup, pas de preseed
+- Utilisé par : OPNsense-Master
 
-| IP            | Rôle                                           |
-| :------------ | :--------------------------------------------- |
-| `10.0.10.1`   | Samba4 AD DC (contrôleur de domaine principal) |
-| `10.0.10.2`   | PowerDNS (résolution DNS interne)              |
-| `10.0.10.3`   | Serveur applicatif Ymmo (Docker host)          |
-| `10.0.10.254` | Interface OPNsense VLAN 10 (passerelle)        |
+### Phase 2 — Terraform : provisionnement des VMs
+
+Provider `bpg/proxmox` ~> 0.100. Nécessite un token API pour la gestion des ressources et un agent SSH pour l'upload des snippets Cloud-init sur le nœud Proxmox.
+
+**Source de vérité topologique : `terraform/main.tf`**
+
+Le bloc `locals.sites` est la référence unique de la topologie. Il définit pour chaque site : nom, `site_id`, nœud Proxmox cible, stockage, bridges réseau. Ajouter une agence = étendre cette map et ajouter un bloc dans `zone-agences.tf`.
+
+**Fichiers de zone :**
+
+`zone-infra.tf` — VMs du siège :
+- `OPNsense-Master` : 2 vCPU, 4 Go RAM, interfaces WAN + LAN, clone template 9001
+- `Bastion` : 1 vCPU, 512 Mo RAM, interface WAN uniquement, Cloud-init avec clé SSH
+- `Samba4-DC1` : 2 vCPU, 4 Go RAM, VLAN 10, IP statique `10.0.10.1/24`, Cloud-init
+
+`zone-agences.tf` — VMs agences (une VM Debian par agence, endpoint WireGuard) :
+- `Agence-01` : 1 vCPU, 1 Go RAM, interface WAN, Cloud-init avec clé SSH
+- `Agence-02` : idem, site_id 2
+
+**Injection Cloud-init :**
+
+Le template `terraform/templates/cloud-init-debian.yml.tftpl` est uploadé comme snippet Proxmox. Il configure le hostname et les clés SSH autorisées. Le bloc `lifecycle.ignore_changes` sur `user_data_file_id` empêche un re-upload à chaque plan.
+
+### Phase 3 — Ansible : configuration post-déploiement
+
+**Inventaire dynamique :** plugin `community.proxmox.proxmox` configuré dans `ansible/inventory/`. Filtre les VMs taguées `ymmotom` et les groupe par tag Proxmox.
+
+Groupes utilisés dans les playbooks :
+
+| Groupe | Tag Proxmox | VMs ciblées |
+|---|---|---|
+| `tag_router` | `router` | OPNsense-Master |
+| `tag_bastion` | `bastion` | Bastion |
+| `tag_samba4` | `samba4` | Samba4-DC1 |
+| `tag_agence` | `agence` | Agence-01, Agence-02 |
+
+**Playbooks, dans l'ordre d'exécution recommandé :**
+
+1. `opnsense_setup.yml` — bootstrap OPNsense : accès API, configuration de base
+2. `opnsense_network.yml` — VLANs, DHCP Dnsmasq, règles firewall
+3. `wireguard.yml` — génération des clés, configuration des peers, activation des tunnels
+4. `samba4.yml` — installation et provisionnement du contrôleur de domaine AD
+
+OPNsense est configuré exclusivement via l'API HTTP (collection `oxlorg.opnsense` 25.7.8). Les playbooks OPNsense utilisent `gather_facts: false` — OPNsense tourne sur FreeBSD sans Python.
+
+Le Bastion sert de jump host pour atteindre les VMs sur les VLANs internes. Le tunnel WireGuard `10.254.0.2` du Bastion est établi avant de rejouer les playbooks vers les VMs internes.
 
 ---
 
-### 6.2. Agences — Sites `1` à `12`
+## 4. Décisions techniques
 
-**Périmètre par agence :** \~5 postes commerciaux, 1 imprimante. **Préfixe de site :** `10.[ID_AGENCE].X.X`
+### Routeur / Firewall — OPNsense
 
-Chaque agence dispose de deux VLANs fonctionnels, alignés sur la même numérotation que le siège pour la cohérence des règles de filtrage :
+OPNsense est retenu pour son API REST complète, qui permet une automatisation Ansible sans accès SSH. La collection `oxlorg.opnsense` couvre la gestion des interfaces, VLANs, règles NAT/firewall, DHCP et WireGuard.
 
-| Site          | VLAN 20 — Utilisateurs | VLAN 30 — Imprimantes | Passerelle locale |
-| :------------ | :--------------------- | :-------------------- | :---------------- |
-| **Agence 01** | `10.1.20.0/24`         | `10.1.30.0/24`        | `10.1.X.254`      |
-| **Agence 02** | `10.2.20.0/24`         | `10.2.30.0/24`        | `10.2.X.254`      |
-| **Agence 03** | `10.3.20.0/24`         | `10.3.30.0/24`        | `10.3.X.254`      |
-| **Agence 04** | `10.4.20.0/24`         | `10.4.30.0/24`        | `10.4.X.254`      |
-| **Agence 05** | `10.5.20.0/24`         | `10.5.30.0/24`        | `10.5.X.254`      |
-| **Agence 06** | `10.6.20.0/24`         | `10.6.30.0/24`        | `10.6.X.254`      |
-| **Agence 07** | `10.7.20.0/24`         | `10.7.30.0/24`        | `10.7.X.254`      |
-| **Agence 08** | `10.8.20.0/24`         | `10.8.30.0/24`        | `10.8.X.254`      |
-| **Agence 09** | `10.9.20.0/24`         | `10.9.30.0/24`        | `10.9.X.254`      |
-| **Agence 10** | `10.10.20.0/24`        | `10.10.30.0/24`       | `10.10.X.254`     |
-| **Agence 11** | `10.11.20.0/24`        | `10.11.30.0/24`       | `10.11.X.254`     |
-| **Agence 12** | `10.12.20.0/24`        | `10.12.30.0/24`       | `10.12.X.254`     |
+### DHCP — Dnsmasq (intégré OPNsense)
 
----
+Dnsmasq est le service DHCP retenu sur OPNsense. Il couvre également la résolution DNS dynamique des baux DHCP, ce qui simplifie l'intégration avec le DNS interne. Kea DHCP a été écarté — non natif sur OPNsense et plus complexe à maintenir dans ce contexte.
 
-### 6.3. Interconnexion VPN (WireGuard) — Réseau `254`
+### DNS interne — Dnsmasq (OPNsense) + Samba4
 
-Le plan de transport VPN utilise un sous-réseau dédié hors des plages de sites, évitant tout risque de chevauchement.
+La résolution DNS interne des postes du domaine est assurée par Samba4-DC1 (`10.0.10.1`), qui agit comme serveur DNS autoritaire pour la zone AD. OPNsense transfert les requêtes DNS internes vers Samba4.
 
-| Réseau        | Plage / Masque  | Rôle                                     |
-| :------------ | :-------------- | :--------------------------------------- |
-| `VPN_WG_CORE` | `10.254.0.0/24` | Backbone WireGuard — tunnels Site-à-Site |
+### Annuaire — Samba4 en mode AD DC
 
-**Attribution des peers WireGuard :**
+Le cahier des charges requiert Active Directory et GPO. Samba4 est la seule implémentation libre production-ready compatible avec ces protocoles (LDAP, Kerberos, GPO, clients Windows et Linux). Il est déployé sur Samba4-DC1 dans le VLAN SRV du siège.
 
-| IP Tunnel     | Peer                                  |
-| :------------ | :------------------------------------ |
-| `10.254.0.1`  | Siège (OPNsense — endpoint WireGuard) |
-| `10.254.0.11` | Agence 01                             |
-| `10.254.0.12` | Agence 02                             |
-| _(...)_       | _(...)_                               |
-| `10.254.0.22` | Agence 12                             |
+### Contrôleur de domaine unique (démo)
+
+Un seul DC est déployé (Samba4-DC1). Un second DC de réplication est prévu pour la production mais n'est pas instancié dans le périmètre démo.
+
+### VPN site-à-site — WireGuard (plugin OPNsense)
+
+WireGuard est intégré nativement dans OPNsense. Ses avantages dans ce contexte : configuration entièrement déclarative via l'API OPNsense, performances supérieures à IPSec, footprint minimal, paires de clés gérables par Ansible. Chaque agence est un peer WireGuard configuré sur OPNsense-Master.
+
+### Bastion comme point d'entrée Ansible
+
+Le Bastion (`192.168.10.43`) est la seule VM accessible directement depuis le réseau de contrôle. Il dispose d'une interface WireGuard (`10.254.0.2`) qui lui donne accès aux VLANs internes via le tunnel. Cela évite d'exposer l'ensemble de l'infrastructure sur le WAN.
+
+### Cloud-init pour la configuration initiale des VMs
+
+Cloud-init est injecté par Terraform via un snippet Proxmox. Il configure uniquement le hostname et les clés SSH autorisées — assez pour qu'Ansible puisse atteindre la VM. Toute la configuration applicative relève d'Ansible, pas de Cloud-init.
+
+### Module Terraform `modules/vm`
+
+Un module unique gère la création de toutes les VMs : clone depuis template, interfaces réseau dynamiques (avec VLAN ID optionnel), upload du snippet Cloud-init, IP statique via le bloc `initialization`. Ce module est l'unique point de création de VM — aucune ressource `proxmox_virtual_environment_vm` n'est instanciée directement dans les fichiers de zone.
 
 ---
 
-### 6.4. Récapitulatif des Plages Réservées
+## 5. Périmètre déployé vs. cible
 
-| Bloc                           | Usage                  | Statut                     |
-| :----------------------------- | :--------------------- | :------------------------- |
-| `10.0.0.0/16`                  | Siège Social           | ✅ Déployé                 |
-| `10.1.0.0/16` – `10.2.0.0/16`  | Agences 01–02          | ✅ Déployé (démo)          |
-| `10.3.0.0/16` – `10.12.0.0/16` | Agences 03–12          | 🔒 Réservé (non instancié) |
-| `10.254.0.0/24`                | Backbone VPN WireGuard | ✅ Déployé                 |
-| `10.255.0.0/24`                | Réservé (usage futur)  | 🔒 Réservé                 |
+| Composant | Démo (déployé) | Cible production |
+|---|---|---|
+| OPNsense-Master | 1 instance | 1 instance (+ redondance envisagée) |
+| Bastion | 1 instance | 1 instance |
+| Samba4 AD DC | 1 DC (DC1) | 2 DC (réplication) |
+| Agences | 2 (Agence-01, Agence-02) | Jusqu'à 12 |
+| Stack applicative Ymmo | Non déployée via ce pipeline | Docker Compose sur VM dédiée VLAN 10 |
+
+---
+
+## 6. Récapitulatif des plages IP réservées
+
+| Bloc | Usage | Statut |
+|---|---|---|
+| `10.0.0.0/16` | Siège Social | Déployé |
+| `10.1.0.0/16` | Agence 01 | Déployé (démo) |
+| `10.2.0.0/16` | Agence 02 | Déployé (démo) |
+| `10.3.0.0/16` – `10.12.0.0/16` | Agences 03–12 | Réservé, non instancié |
+| `10.254.0.0/24` | Backbone WireGuard | Déployé |
+| `10.255.0.0/24` | Réservé usage futur | Non instancié |
+| `192.168.10.0/24` | WAN Proxmox (réseau physique) | Hors périmètre IaC |
