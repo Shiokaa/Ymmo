@@ -1,0 +1,19 @@
+---
+# Active WireGuard globalement sur OPNsense (case "Enable WireGuard" dans VPN → WireGuard → General).
+# Sans cette activation, OPNsense stocke la configuration mais ne monte aucune interface wg*.
+
+- name: "General | Activer WireGuard globalement sur OPNsense"
+  oxlorg.opnsense.wireguard_general:
+    enabled: true
+
+- name: "General | Démarrer le service WireGuard"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host }}/api/wireguard/service/reconfigure"
+    method: POST
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    validate_certs: "{{ opnsense_ssl_verify }}"
+    force_basic_auth: true
+    status_code: 200
+  register: wg_reconfigure_result
+  changed_when: false

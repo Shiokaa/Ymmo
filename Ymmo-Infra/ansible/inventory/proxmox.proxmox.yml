@@ -38,4 +38,6 @@ compose:
     reject('match', '^192\.168\.1\.') |
     first | split('/') | first | default(inventory_hostname)
 
-  ansible_user: "'root'"
+  # ansible_user n'est pas défini ici : chaque groupe le fixe dans ses group_vars.
+  # tag_bastion, tag_samba4, tag_agence → sysadmin (cloud-init Debian).
+  # tag_router (OPNsense) → pas de SSH, connexion via API HTTP uniquement.

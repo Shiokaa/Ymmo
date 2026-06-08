@@ -26,3 +26,19 @@
   loop: "{{ opnsense_network_vlans }}"
   loop_control:
     label: "{{ item.name }} ({{ item.dhcp_start }}-{{ item.dhcp_end }})"
+
+# Sans cette option, Dnsmasq pousse par defaut l'IP de l'interface OPNsense
+# (ex: 10.0.20.254 / Unbound) comme DNS. Unbound ne connait pas la zone AD,
+# donc le join de domaine echoue. On force l'option 6 vers le DC (10.0.10.1).
+# La description sert de cle d'idempotence (FIELD_ID = 'description' cote module).
+- name: "DHCP | Pousser le DC comme serveur DNS (option 6) par VLAN"
+  oxlorg.opnsense.dnsmasq_option:
+    description: "DNS-{{ item.name }}"
+    type: set
+    option: 6
+    interface: "{{ item.name }}"
+    value: "{{ opnsense_network_dns_servers | join(',') }}"
+    state: present
+  loop: "{{ opnsense_network_vlans }}"
+  loop_control:
+    label: "{{ item.name }} -> {{ opnsense_network_dns_servers | join(',') }}"

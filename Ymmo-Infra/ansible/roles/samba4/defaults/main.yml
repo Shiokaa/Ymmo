@@ -1,0 +1,24 @@
+---
+# Realm Kerberos — doit être en MAJUSCULES et correspondre au FQDN du domaine AD.
+samba4_realm: "YMMO.LAN"
+
+# Nom NetBIOS du domaine — majuscules, 15 caractères max.
+samba4_domain: "YMMO"
+
+# FQDN du contrôleur de domaine (hostname + realm).
+samba4_dc_fqdn: "dc1.ymmo.lan"
+
+# IP statique du DC, définie par cloud-init Terraform (VLAN 10, 10.0.10.1/24).
+# Utilisée pour l'entrée /etc/hosts et le flag --host-ip de samba-tool.
+samba4_dc_ip: "10.0.10.1"
+
+# DNS forwarder : passerelle OPNsense sur le VLAN 10.
+# OPNsense (Dnsmasq + Unbound) résout les noms externes.
+samba4_dns_forwarder: "10.0.10.254"
+
+# Chemin du fichier smb.conf généré par samba-tool domain provision.
+samba4_smb_conf: "/etc/samba/smb.conf"
+
+# Chemin de la base de données privée Samba (sam.ldb).
+# Son existence indique que le domaine a déjà été provisionné.
+samba4_sam_db: "/var/lib/samba/private/sam.ldb"

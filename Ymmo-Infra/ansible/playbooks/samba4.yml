@@ -1,0 +1,20 @@
+---
+# Playbook : configuration Samba4 en mode Active Directory Domain Controller.
+# Cible les VMs taguées "samba4" dans l'inventaire dynamique Proxmox.
+#
+# Prérequis :
+#   - La VM Samba4-DC1 doit être démarrée (provisionnée par Terraform, zone-infra.tf)
+#   - vault_samba4_admin_password doit être défini dans group_vars/all/vault.yml
+#   - Le vault doit être déchiffré : ansible-playbook ... --ask-vault-pass
+#
+# Exécution :
+#   ansible-playbook ansible/playbooks/samba4.yml --ask-vault-pass
+
+- name: "Configuration Samba4 AD DC — Siège"
+  hosts: tag_samba4
+  # gather_facts: false — aucun ansible_* n'est consommé dans le rôle samba4.
+  gather_facts: false
+  become: true
+
+  roles:
+    - samba4

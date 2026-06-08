@@ -1,0 +1,48 @@
+---
+# Validation des prérequis avant l'installation et le provisionnement Samba4.
+
+- name: "Assert | Vérifier le format de samba4_realm"
+  ansible.builtin.assert:
+    that:
+      - samba4_realm is defined
+      - samba4_realm is match('^[A-Z0-9][A-Z0-9.-]*[A-Z0-9]$')
+    fail_msg: >-
+      samba4_realm doit être un FQDN en MAJUSCULES sans caractères spéciaux (ex: YMMO.LAN).
+      Valeur actuelle : {{ samba4_realm | default('non définie') }}
+    success_msg: "Realm Kerberos valide : {{ samba4_realm }}"
+
+- name: "Assert | Vérifier le format de samba4_domain"
+  ansible.builtin.assert:
+    that:
+      - samba4_domain is defined
+      - samba4_domain is match('^[A-Z0-9-]{1,15}$')
+    fail_msg: >-
+      samba4_domain doit être en MAJUSCULES, alphanumérique, 15 caractères max (ex: YMMO).
+      Valeur actuelle : {{ samba4_domain | default('non définie') }}
+    success_msg: "Domaine NetBIOS valide : {{ samba4_domain }}"
+
+- name: "Assert | Vérifier le format de samba4_dc_ip"
+  ansible.builtin.assert:
+    that:
+      - samba4_dc_ip is defined
+      - samba4_dc_ip is match('^([0-9]{1,3}\.){3}[0-9]{1,3}$')
+    fail_msg: >-
+      samba4_dc_ip doit être une adresse IPv4 valide (ex: 10.0.10.1).
+      Valeur actuelle : {{ samba4_dc_ip | default('non définie') }}
+    success_msg: "IP du DC valide : {{ samba4_dc_ip }}"
+
+- name: "Assert | Vérifier la politique de mot de passe administrateur AD"
+  ansible.builtin.assert:
+    that:
+      - samba4_admin_password is defined
+      - samba4_admin_password | length >= 14
+      - samba4_admin_password is match('.*[A-Z].*')
+      - samba4_admin_password is match('.*[a-z].*')
+      - samba4_admin_password is match('.*[0-9].*')
+      - samba4_admin_password is match('.*[^A-Za-z0-9].*')
+    fail_msg: >-
+      samba4_admin_password doit contenir au moins 14 caractères avec majuscule,
+      minuscule, chiffre et caractère spécial.
+      Stocker dans le vault : vault_samba4_admin_password.
+    success_msg: "Politique de mot de passe administrateur AD respectée"
+  no_log: true

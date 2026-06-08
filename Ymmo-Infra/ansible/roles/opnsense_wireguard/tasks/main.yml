@@ -5,6 +5,10 @@
   ansible.builtin.import_tasks: 00_assert.yml
   tags: [always]
 
+- name: Activer WireGuard globalement sur OPNsense
+  ansible.builtin.import_tasks: 05_general.yml
+  tags: [general]
+
 - name: Configurer le serveur WireGuard (génération des clés par OPNsense)
   ansible.builtin.import_tasks: 10_server.yml
   tags: [server]

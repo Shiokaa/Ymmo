@@ -30,6 +30,11 @@
         name: opnsense_wireguard
         tasks_from: 00_assert.yml
 
+    - name: "Activer WireGuard globalement sur OPNsense"
+      ansible.builtin.import_role:
+        name: opnsense_wireguard
+        tasks_from: 05_general.yml
+
     - name: "Créer l'instance WireGuard et récupérer la clé publique"
       ansible.builtin.import_role:
         name: opnsense_wireguard
@@ -40,9 +45,9 @@
         name: opnsense_wireguard
         tasks_from: 30_firewall.yml
 
-# ── Play 2 : Génération des clés sur les VMs Debian ──────────────────────────
+# ── Play 2 : Génération des clés sur les VMs Debian (agences + bastion) ──────
 - name: "WireGuard | Debian — Installer et générer les clés (spokes)"
-  hosts: tag_agence
+  hosts: tag_agence:tag_bastion
   gather_facts: false
   become: true
   vars:
@@ -82,9 +87,9 @@
         name: opnsense_wireguard
         tasks_from: 20_peers.yml
 
-# ── Play 4 : Configuration et démarrage du service sur les agences ───────────
+# ── Play 4 : Configuration et démarrage du service sur les agences + bastion ─
 - name: "WireGuard | Debian — Configurer wg0.conf et démarrer le service"
-  hosts: tag_agence
+  hosts: tag_agence:tag_bastion
   gather_facts: false
   become: true
   vars:

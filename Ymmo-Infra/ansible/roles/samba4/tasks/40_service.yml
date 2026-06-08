@@ -1,0 +1,23 @@
+---
+# Gestion des services systemd pour Samba4 AD DC.
+# smbd, nmbd et winbind doivent être masqués (pas seulement désactivés) :
+# samba-ad-dc lance ses propres sous-processus smbd et winbindd.
+# Les lancer en parallèle provoque des conflits de ports et casse le DC.
+
+- name: "Service | Masquer les services incompatibles avec le mode AD DC"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    enabled: false
+    masked: true
+  loop:
+    - smbd
+    - nmbd
+    - winbind
+
+- name: "Service | Activer et démarrer samba-ad-dc"
+  ansible.builtin.systemd:
+    name: samba-ad-dc
+    state: started
+    enabled: true
+    daemon_reload: true

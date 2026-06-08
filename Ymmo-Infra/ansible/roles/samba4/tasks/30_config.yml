@@ -1,0 +1,55 @@
+---
+# Configuration post-provisionnement : Kerberos, DNS forwarder, résolveur réseau.
+# systemd-resolved doit être désactivé : il entre en conflit avec le DNS interne Samba
+# (les deux tentent d'écouter sur le port 53).
+
+- name: "Config | Copier krb5.conf généré par samba-tool vers /etc/krb5.conf"
+  ansible.builtin.copy:
+    src: /var/lib/samba/private/krb5.conf
+    dest: /etc/krb5.conf
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0644"
+  # Ne pas créer de lien symbolique : /var/lib/samba/private/ devient inaccessible
+  # aux processus non-root dans Samba 4.7+. (cf. wiki.samba.org)
+
+- name: "Config | Ajouter le DNS forwarder dans smb.conf"
+  ansible.builtin.lineinfile:
+    path: "{{ samba4_smb_conf }}"
+    regexp: "^\\s*dns forwarder"
+    insertafter: "^\\[global\\]"
+    line: "\tdns forwarder = {{ samba4_dns_forwarder }}"
+  # Le handler s'exécute en fin de play, après que 40_service.yml a démarré samba-ad-dc.
+  notify: Restart samba-ad-dc
+
+# Debian 12 minimal n'installe pas systemd-resolved (paquet séparé depuis Bookworm).
+# On ne masque le service que s'il est réellement présent : sinon il n'y a aucun
+# conflit sur le port 53 à résoudre, l'état désiré est déjà atteint.
+- name: "Config | Vérifier la présence de l'unité systemd-resolved"
+  ansible.builtin.stat:
+    path: /lib/systemd/system/systemd-resolved.service
+  register: samba4_resolved_unit
+
+- name: "Config | Désactiver et masquer systemd-resolved (si présent)"
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: stopped
+    enabled: false
+    masked: true
+  when: samba4_resolved_unit.stat.exists
+
+- name: "Config | Supprimer le lien symbolique /etc/resolv.conf géré par systemd-resolved"
+  ansible.builtin.file:
+    path: /etc/resolv.conf
+    state: absent
+
+- name: "Config | Créer /etc/resolv.conf pointant vers le DNS Samba local"
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      search {{ samba4_realm | lower }}
+      nameserver 127.0.0.1
+    owner: root
+    group: root
+    mode: "0644"

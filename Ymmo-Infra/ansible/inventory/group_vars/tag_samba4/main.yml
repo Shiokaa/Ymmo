@@ -1,0 +1,30 @@
+---
+# Variables de groupe pour les contrôleurs de domaine Samba4 (tag : samba4).
+# Les valeurs sensibles (mot de passe admin AD) sont chargées depuis le vault Ansible.
+# Ajouter dans group_vars/all/vault.yml :
+#   vault_samba4_admin_password: "<mot de passe fort>"
+
+# Utilisateur SSH pour la connexion initiale — root est désactivé par le script de durcissement.
+ansible_user: sysadmin
+
+# Pipelining géré globalement dans ansible.cfg (désactivé).
+# Timeout élevé : la chaîne ProxyJump ajoute ~3s par connexion SSH.
+ansible_become_timeout: 30
+
+# Realm Kerberos et domaine NetBIOS du DC du siège.
+samba4_realm: "YMMO.LAN"
+samba4_domain: "YMMO"
+
+# FQDN et IP du contrôleur de domaine principal (DC1, VLAN 10 Siège).
+samba4_dc_fqdn: "dc1.ymmo.lan"
+samba4_dc_ip: "10.0.10.1"
+
+# DNS forwarder : passerelle OPNsense sur le VLAN SRV_SIEGE.
+samba4_dns_forwarder: "10.0.10.254"
+
+# Mot de passe de l'administrateur AD — chargé depuis le vault.
+samba4_admin_password: "{{ vault_samba4_admin_password }}"
+
+# Jump host WireGuard : SSH tunnelisé via le Bastion (10.254.0.2) pour atteindre le VLAN 10.
+# UserKnownHostsFile=/dev/null : évite le blocage sur mismatch de clé après un rebuild Terraform.
+ansible_ssh_common_args: "-o ProxyJump=sysadmin@{{ hostvars[groups['tag_bastion'][0]]['ansible_host'] }} -o ForwardAgent=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"

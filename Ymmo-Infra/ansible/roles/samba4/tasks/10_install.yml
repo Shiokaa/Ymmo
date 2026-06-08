@@ -1,0 +1,54 @@
+---
+# Installation du metapackage samba-ad-dc et de ses dependances sur Debian 12 Bookworm.
+# DEBIAN_FRONTEND=noninteractive est requis pour eviter les prompts interactifs de krb5-config
+# (les reponses n'ont pas d'importance : /etc/krb5.conf est remplace apres le provisionnement).
+#
+# IMPORTANT : apres installation, smbd/nmbd/winbind sont demarres automatiquement par dpkg.
+# Ces services modifient /etc/nsswitch.conf pour ajouter "winbind" aux bases passwd/group/hosts.
+# Si winbind tourne sans domaine provisionne, chaque appel NSS bloque => sudo timeout =>
+# toutes les taches Ansible avec become echouent a partir de la prochaine execution.
+# Solution : masquer et arreter ces trois services immediatement apres l'installation.
+
+- name: "Install | Configurer le resolveur DNS (OPNsense VLAN 10)"
+  ansible.builtin.copy:
+    dest: /etc/resolv.conf
+    content: |
+      nameserver {{ samba4_dns_forwarder }}
+      nameserver 8.8.8.8
+      search ymmo.lan
+    mode: "0644"
+
+- name: "Install | Mettre a jour le cache apt"
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Install | Installer samba-ad-dc et les dependances"
+  ansible.builtin.apt:
+    name:
+      - samba-ad-dc   # Metapackage Debian 12 : inclut samba, samba-dsdb-modules, winbind
+      - krb5-config   # Configuration Kerberos (remplace apres provision)
+      - krb5-user     # Outils client Kerberos (kinit, klist) pour le diagnostic du DC
+      - dnsutils      # Outils de diagnostic DNS (host, dig, nslookup)
+      - smbclient     # Client SMB pour les tests de fumee
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: "Install | Masquer smbd/nmbd/winbind (Debian 12 : requis avant provision AD)"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    masked: true
+    enabled: false
+  loop:
+    - smbd
+    - nmbd
+    - winbind
+  failed_when: false
+
+- name: "Install | Retirer winbind de nsswitch.conf"
+  ansible.builtin.replace:
+    path: /etc/nsswitch.conf
+    regexp: '\s*winbind'
+    replace: ''

@@ -1,0 +1,13 @@
+---
+# NAT outbound : géré directement dans le template Packer (opnsense-setup.sh).
+#
+# L'API REST OPNsense (/api/firewall/nat/outbound/*) n'est pas exposée —
+# le code NAT outbound reste dans le legacy PHP et renvoie 404 sur tous les
+# endpoints MVC testés (search_rule, searchRule, add_rule, addRule).
+#
+# Solution retenue : injection PHP dans config.xml lors du build Packer.
+# Mode "hybrid" + règles explicites par VLAN baked dans le template 9001.
+# Voir : packer/scripts/opnsense-setup.sh, section 8.
+#
+# Ce fichier est intentionnellement vide.
+# Il reste présent pour documenter la décision et éviter une régression.

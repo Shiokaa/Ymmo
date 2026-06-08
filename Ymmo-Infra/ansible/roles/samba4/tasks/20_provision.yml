@@ -1,0 +1,87 @@
+---
+# Provisionnement du domaine Active Directory via samba-tool.
+#
+# Idempotence : on verifie que samba-tool peut interroger le domaine (pas juste
+# que sam.ldb existe). Une provision partiellement echouee laisse un sam.ldb
+# corrompu — on doit detecter ce cas et relancer proprement.
+#
+# Prerequis Debian 12 : smbd/nmbd/winbind doivent etre masques AVANT la provision.
+# Sinon leur VFS entre en conflit avec samba-tool lors de l'acces a sam.ldb,
+# ce qui provoque : "ldb: module samba_dsdb initialization failed".
+
+- name: "Provision | Configurer le hostname du DC"
+  ansible.builtin.hostname:
+    name: "{{ samba4_dc_fqdn | split('.') | first }}"
+
+- name: "Provision | Ajouter l'entree FQDN dans /etc/hosts"
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "^{{ samba4_dc_ip | regex_escape }}\\s"
+    line: "{{ samba4_dc_ip }} {{ samba4_dc_fqdn }} {{ samba4_dc_fqdn | split('.') | first }}"
+    state: present
+
+- name: "Provision | Verifier si le domaine est deja provisionne et fonctionnel"
+  ansible.builtin.command:
+    cmd: samba-tool domain info "{{ samba4_dc_ip }}"
+  register: samba4_domain_check
+  changed_when: false
+  failed_when: false
+
+- name: "Provision | Masquer smbd/nmbd/winbind (requis Debian 12 avant provision)"
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: stopped
+    masked: true
+    enabled: false
+  loop:
+    - smbd
+    - nmbd
+    - winbind
+  failed_when: false
+  when: samba4_domain_check.rc != 0
+
+- name: "Provision | Nettoyer l'etat Samba residuel (provision precedente echouee)"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /var/lib/samba/private
+    - /var/lib/samba/sysvol
+    - /etc/samba/smb.conf
+  when: samba4_domain_check.rc != 0
+
+- name: "Provision | Provisionner le domaine Active Directory"
+  ansible.builtin.shell:
+    # Le mot de passe est passe via la variable d'environnement SAMBA_ADMIN_PASS
+    # pour eviter son exposition dans /proc/<pid>/cmdline.
+    cmd: |
+      samba-tool domain provision \
+        --use-rfc2307 \
+        --dns-backend=SAMBA_INTERNAL \
+        --realm={{ samba4_realm }} \
+        --domain={{ samba4_domain }} \
+        --server-role=dc \
+        --host-ip={{ samba4_dc_ip }} \
+        --adminpass="${SAMBA_ADMIN_PASS}"
+  environment:
+    SAMBA_ADMIN_PASS: "{{ samba4_admin_password }}"
+  when: samba4_domain_check.rc != 0
+  no_log: true
+  register: samba4_provision_result
+  changed_when: true
+
+- name: "Provision | Afficher stderr en cas d'echec"
+  ansible.builtin.debug:
+    msg: "{{ samba4_provision_result.stderr_lines | default([]) }}"
+  when:
+    - samba4_domain_check.rc != 0
+    - samba4_provision_result is defined
+    - samba4_provision_result is failed
+
+- name: "Provision | Confirmer le provisionnement"
+  ansible.builtin.debug:
+    msg: "Domaine {{ samba4_realm }} provisionne avec succes sur {{ samba4_dc_fqdn }}"
+  when:
+    - samba4_domain_check.rc != 0
+    - samba4_provision_result is defined
+    - samba4_provision_result is not failed

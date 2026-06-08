@@ -1,5 +1,7 @@
 ---
 # Variables communes à tous les hôtes du groupe tag_agence (VMs agences).
-# Le compose de l'inventaire dynamique fixe ansible_user à root pour tous les hôtes.
-# On surcharge ici pour les agences Debian qui utilisent l'utilisateur sysadmin (cloud-init).
+# Les VMs agences sont des clones Debian 12 : l'utilisateur SSH est sysadmin (cloud-init).
 ansible_user: sysadmin
+
+# Même raison que tag_samba4 : Debian 12 use_pty vs pipelining.
+ansible_pipelining: false

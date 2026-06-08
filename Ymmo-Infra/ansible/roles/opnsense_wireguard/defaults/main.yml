@@ -5,6 +5,9 @@ wireguard_server_name: "WG-Siege"
 # Port UDP d'écoute du serveur WireGuard.
 wireguard_server_port: 51820
 
+# Réseau backbone WireGuard (utilisé dans les règles firewall OPNsense).
+wireguard_backbone_network: "10.254.0.0/24"
+
 # Adresse tunnel du siège dans le backbone VPN (10.254.0.0/24).
 wireguard_server_tunnel_ip: "10.254.0.1/24"
 
@@ -14,6 +17,10 @@ wireguard_server_tunnel_ip: "10.254.0.1/24"
 # - tunnel_ip      : IP du peer dans le backbone WireGuard (/32)
 # - allowed_ips    : sous-réseau(x) du site distant routés via ce peer
 wireguard_peers:
+  - name: "Bastion"
+    inventory_hostname: "Bastion"
+    tunnel_ip: "10.254.0.2/32"
+    allowed_ips: "10.254.0.2/32"
   - name: "Agence-01"
     inventory_hostname: "Agence-01"
     tunnel_ip: "10.254.0.11/32"

@@ -1,0 +1,38 @@
+---
+# Tests de fumée post-configuration du contrôleur de domaine.
+# Vérifient que Samba4 répond correctement en LDAP, DNS et Kerberos.
+
+- name: "Smoke | Vérifier les informations du domaine via samba-tool"
+  ansible.builtin.command: samba-tool domain info 127.0.0.1
+  register: samba4_domain_info
+  changed_when: false
+  failed_when: samba4_domain_info.rc != 0
+
+- name: "Smoke | Afficher les informations du domaine"
+  ansible.builtin.debug:
+    msg: "{{ samba4_domain_info.stdout_lines }}"
+
+- name: "Smoke | Tester la résolution DNS du realm via le DNS Samba"
+  ansible.builtin.command: "host -t A {{ samba4_realm | lower }} 127.0.0.1"
+  register: samba4_dns_realm
+  changed_when: false
+  failed_when: samba4_dns_realm.rc != 0
+
+- name: "Smoke | Tester la résolution DNS du DC lui-même"
+  ansible.builtin.command: "host -t A {{ samba4_dc_fqdn }} 127.0.0.1"
+  register: samba4_dns_dc
+  changed_when: false
+  failed_when: samba4_dns_dc.rc != 0
+
+- name: "Smoke | Lister les utilisateurs du domaine"
+  ansible.builtin.command: samba-tool user list
+  register: samba4_user_list
+  changed_when: false
+  failed_when: samba4_user_list.rc != 0
+
+- name: "Smoke | Vérifier que l'utilisateur Administrator est présent"
+  ansible.builtin.assert:
+    that:
+      - "'Administrator' in samba4_user_list.stdout"
+    fail_msg: "L'utilisateur Administrator n'est pas présent dans le domaine {{ samba4_domain }}"
+    success_msg: "Contrôleur de domaine {{ samba4_realm }} opérationnel"

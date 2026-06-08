@@ -1,6 +1,7 @@
 ---
 # Le template Packer a déjà baked une règle pour TCP 443 (accès API).
-# On ajoute ici la règle UDP 51820 pour le tunnel WireGuard.
+# On ajoute ici les règles WireGuard : inbound UDP 51820 sur WAN
+# et autorisation du trafic depuis le backbone VPN vers les VLANs internes.
 # match_fields: ['description'] garantit l'idempotence sur re-run.
 
 - name: "Firewall | Autoriser WireGuard UDP {{ wireguard_server_port }} sur le WAN"
@@ -16,3 +17,19 @@
     destination_net: "(self)"
     enabled: true
     state: present
+
+# La règle floating "backbone WireGuard → VLANs Siège" est baked dans le template
+# Packer (packer/scripts/opnsense-setup.sh). L'API OPNsense ne peut pas créer de
+# vraies floating rules (issue OPNsense #6938), donc cette injection se fait au build
+# Packer directement dans config.xml via PHP. Aucune action Ansible nécessaire ici.
+
+- name: "Firewall | Appliquer les règles firewall OPNsense"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host }}/api/firewall/filter/apply"
+    method: POST
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    validate_certs: "{{ opnsense_ssl_verify }}"
+    force_basic_auth: true
+    status_code: [200]
+  changed_when: false

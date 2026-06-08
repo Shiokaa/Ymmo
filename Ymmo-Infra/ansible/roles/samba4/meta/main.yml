@@ -1,0 +1,16 @@
+---
+galaxy_info:
+  author: Ymmo-Infra
+  description: "Configuration Samba4 en mode Active Directory Domain Controller sur Debian 12"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - samba4
+    - active_directory
+    - ldap
+    - kerberos
+    - debian
+dependencies: []

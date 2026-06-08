@@ -1,0 +1,28 @@
+---
+# Orchestration du rôle samba4.
+# Configure Samba4 en mode Active Directory Domain Controller sur Debian 12.
+# Séquence : assert → install → provision → config → service → smoke
+
+- name: Vérifier les prérequis
+  ansible.builtin.import_tasks: 00_assert.yml
+  tags: [always]
+
+- name: Installer les paquets Samba4 AD DC
+  ansible.builtin.import_tasks: 10_install.yml
+  tags: [install]
+
+- name: Provisionner le domaine Active Directory
+  ansible.builtin.import_tasks: 20_provision.yml
+  tags: [provision]
+
+- name: Configurer DNS, Kerberos et résolveur réseau
+  ansible.builtin.import_tasks: 30_config.yml
+  tags: [config]
+
+- name: Activer et démarrer le service samba-ad-dc
+  ansible.builtin.import_tasks: 40_service.yml
+  tags: [service]
+
+- name: Vérifier le bon fonctionnement du contrôleur de domaine
+  ansible.builtin.import_tasks: 99_smoke.yml
+  tags: [smoke]

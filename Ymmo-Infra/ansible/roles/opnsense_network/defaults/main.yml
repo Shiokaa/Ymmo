@@ -42,7 +42,19 @@ opnsense_network_vlans:
     dhcp_end: "10.0.99.200"
 
 # Domaine DNS interne du Siege.
-opnsense_network_dns_domain: "ymmo.local"
+# Doit correspondre au realm Active Directory (samba4_realm = YMMO.LAN) :
+# les clients Windows recoivent ce suffixe DNS via DHCP et l'utilisent pour
+# localiser le domaine. Une valeur differente (ex: ymmo.local) casserait le join.
+opnsense_network_dns_domain: "ymmo.lan"
+
+# Serveur(s) DNS pousse(s) aux clients DHCP via l'option 6.
+# DOIT etre le DC Active Directory (10.0.10.1) et lui seul : un client AD doit
+# interroger le DNS du DC pour resoudre les enregistrements SRV (_ldap._tcp...).
+# Le DC forwarde les requetes externes vers OPNsense (samba4_dns_forwarder).
+# Ne PAS ajouter OPNsense en secondaire : Windows alternerait et echouerait
+# par intermittence a resoudre la zone AD.
+opnsense_network_dns_servers:
+  - "10.0.10.1"
 
 # Duree de bail DHCP en secondes (43200 = 12h).
 # Le module dnsmasq_range attend un entier, pas une chaine "12h".

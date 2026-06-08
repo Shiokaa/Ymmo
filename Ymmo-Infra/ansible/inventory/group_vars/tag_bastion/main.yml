@@ -1,0 +1,11 @@
+---
+# Variables de groupe pour le bastion de provisioning (tag : bastion).
+# Le bastion sert de jump host Ansible pour atteindre les VLANs internes via WireGuard.
+
+ansible_user: sysadmin
+
+# Même raison que tag_samba4 : Debian 12 use_pty vs pipelining.
+ansible_pipelining: false
+
+# IP tunnel WireGuard du bastion dans le backbone 10.254.0.0/24.
+wireguard_peer_tunnel_ip: "10.254.0.2/32"
