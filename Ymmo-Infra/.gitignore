@@ -1,6 +1,7 @@
 # IA
 .claude
 CLAUDE.md
+graphify-out
 
 # Secrets et variables locales — jamais committés
 *.pkrvars.hcl
@@ -35,3 +36,6 @@ __pycache__/
 # OS
 .DS_Store
 Thumbs.db
+
+# Artefacts de build (ISO générée par xorriso depuis packer/autounattend/)
+autounattend.iso
