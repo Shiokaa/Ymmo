@@ -1,14 +1,13 @@
 # ============================================
 # Stage 1 : Build avec Maven + JDK Alpine
 # ============================================
-FROM eclipse-temurin:26-jdk-alpine AS build
+FROM eclipse-temurin:21-jdk-alpine AS build
 
 RUN apk add --no-cache maven
 
 WORKDIR /app
 
 # Copier uniquement le pom.xml d'abord pour profiter du cache Docker
-# Les dépendances ne seront re-téléchargées que si le pom.xml change
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
@@ -20,7 +19,7 @@ RUN mvn package -DskipTests -B \
 # ============================================
 # Stage 2 : Runtime minimal avec JRE Alpine
 # ============================================
-FROM eclipse-temurin:26-jre-alpine
+FROM eclipse-temurin:21-jre-alpine
 
 RUN addgroup -S spring && adduser -S spring -G spring
 
