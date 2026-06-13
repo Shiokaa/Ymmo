@@ -1,6 +1,17 @@
 ---
 # Validation des prérequis avant l'installation et le provisionnement Samba4.
 
+# Attend que le DC soit réellement joignable en SSH avant toute tâche.
+# Sur un déploiement « from scratch », la 1re tâche peut taper alors que le DC
+# finit son boot/cloud-init ou que le tunnel WireGuard bastion→OPNsense n'a pas
+# encore fait son handshake (lazy : déclenché par le 1er paquet, qui peut être
+# perdu le temps de la négociation). Les retries de wait_for_connection
+# absorbent cette course et évitent le « Connection closed by UNKNOWN port 65535 ».
+- name: "Assert | Attendre que le DC soit joignable en SSH (tunnel WireGuard + boot)"
+  ansible.builtin.wait_for_connection:
+    timeout: 120
+    sleep: 5
+
 - name: "Assert | Vérifier le format de samba4_realm"
   ansible.builtin.assert:
     that:

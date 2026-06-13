@@ -4,3 +4,9 @@
 collections:
   - name: oxlorg.opnsense
     version: "25.7.8"
+  # Modules Windows génériques (win_dns_client, win_hostname, win_reboot…)
+  - name: ansible.windows
+    version: "3.5.0"
+  # Jonction au domaine Active Directory (microsoft.ad.membership)
+  - name: microsoft.ad
+    version: "1.11.0"

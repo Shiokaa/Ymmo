@@ -25,6 +25,16 @@ samba4_dns_forwarder: "10.0.10.254"
 # Mot de passe de l'administrateur AD — chargé depuis le vault.
 samba4_admin_password: "{{ vault_samba4_admin_password }}"
 
+# Comptes utilisateurs du domaine créés par le rôle samba4 (tâche 50_users).
+# Compte de test pour valider l'ouverture de session domaine sur les clients.
+# NOTE : mot de passe en clair ici (homelab) ; pour un usage réel, le déplacer
+# dans le vault (ex. password: "{{ vault_testuser_password }}").
+samba4_domain_users:
+  - username: testuser
+    password: "Test@Ymmo2026!"
+    given_name: Test
+    surname: User
+
 # Jump host WireGuard : SSH tunnelisé via le Bastion (10.254.0.2) pour atteindre le VLAN 10.
 # UserKnownHostsFile=/dev/null : évite le blocage sur mismatch de clé après un rebuild Terraform.
 ansible_ssh_common_args: "-o ProxyJump=sysadmin@{{ hostvars[groups['tag_bastion'][0]]['ansible_host'] }} -o ForwardAgent=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"

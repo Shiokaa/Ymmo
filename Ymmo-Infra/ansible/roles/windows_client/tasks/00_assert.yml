@@ -1,0 +1,16 @@
+---
+# Vérifications préalables : secrets chargés et hôte joignable.
+
+- name: Vérifier que le mot de passe administrateur du domaine est défini
+  ansible.builtin.assert:
+    that:
+      - windows_client_domain_password | length > 0
+    fail_msg: >-
+      windows_client_domain_password est vide — vérifier que le vault Ansible
+      est déchiffré (vault_samba4_admin_password) et que group_vars/tag_client
+      est bien chargé.
+
+- name: Attendre que le clone Windows soit joignable en SSH (premier boot sysprep)
+  ansible.builtin.wait_for_connection:
+    timeout: "{{ windows_client_boot_timeout }}"
+    sleep: 10

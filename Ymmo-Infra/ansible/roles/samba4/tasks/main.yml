@@ -19,9 +19,17 @@
   ansible.builtin.import_tasks: 30_config.yml
   tags: [config]
 
+- name: Ouvrir le pare-feu hôte pour les services AD
+  ansible.builtin.import_tasks: 35_firewall.yml
+  tags: [firewall]
+
 - name: Activer et démarrer le service samba-ad-dc
   ansible.builtin.import_tasks: 40_service.yml
   tags: [service]
+
+- name: Créer les comptes utilisateurs du domaine
+  ansible.builtin.import_tasks: 50_users.yml
+  tags: [users]
 
 - name: Vérifier le bon fonctionnement du contrôleur de domaine
   ansible.builtin.import_tasks: 99_smoke.yml

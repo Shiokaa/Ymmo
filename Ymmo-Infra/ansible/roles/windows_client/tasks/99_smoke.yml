@@ -1,0 +1,18 @@
+---
+# Contrôles post-jonction : la machine doit localiser son DC et le canal
+# sécurisé NETLOGON doit être fonctionnel.
+
+- name: Localiser le contrôleur de domaine (nltest)
+  ansible.windows.win_command: nltest /dsgetdc:{{ windows_client_domain }}
+  register: windows_client_dsgetdc
+  changed_when: false
+
+- name: Vérifier le canal sécurisé avec le domaine
+  ansible.windows.win_shell: Test-ComputerSecureChannel
+  register: windows_client_secure_channel
+  changed_when: false
+  failed_when: "'True' not in windows_client_secure_channel.stdout"
+
+- name: Afficher le résultat de la jonction
+  ansible.builtin.debug:
+    msg: "Client joint au domaine {{ windows_client_domain }} — DC : {{ windows_client_dsgetdc.stdout_lines | first | default('inconnu') }}"

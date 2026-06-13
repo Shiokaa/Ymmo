@@ -30,10 +30,10 @@ keyed_groups:
 compose:
   ansible_host: >
     proxmox_agent_interfaces | default([]) |
-    selectattr('name', 'in', ['vtnet1', 'eth0', 'ens18']) |
-    map(attribute='ip-addresses') | 
-    flatten | 
-    reject('match', '^127\.') | 
+    selectattr('name', 'match', '^(vtnet1|eth0|ens18|Ethernet)') |
+    map(attribute='ip-addresses') |
+    flatten |
+    reject('match', '^127\.') |
     reject('match', '^fe80') |
     reject('match', '^192\.168\.1\.') |
     first | split('/') | first | default(inventory_hostname)
@@ -41,3 +41,4 @@ compose:
   # ansible_user n'est pas défini ici : chaque groupe le fixe dans ses group_vars.
   # tag_bastion, tag_samba4, tag_agence → sysadmin (cloud-init Debian).
   # tag_router (OPNsense) → pas de SSH, connexion via API HTTP uniquement.
+  # tag_client (Windows) → packer, SSH avec shell PowerShell.

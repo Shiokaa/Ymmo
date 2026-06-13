@@ -1,0 +1,16 @@
+---
+# Playbook de configuration des postes clients Windows 11.
+# Cible les VMs taguées « client » sur Proxmox (groupe dynamique tag_client).
+# Transport : SSH (OpenSSH du template Packer) via ProxyJump bastion —
+# voir group_vars/tag_client. Prérequis : OPNsense + Samba4 déployés.
+
+- name: Configuration des clients Windows (DNS + jonction domaine AD)
+  hosts: tag_client
+  # Pas de gather_facts au démarrage : le clone peut encore être en cours de
+  # premier boot (OOBE sysprep) — le rôle attend la connexion avant d'agir.
+  gather_facts: false
+  # Pas de privilege escalation sur Windows : le compte packer est admin local.
+  become: false
+
+  roles:
+    - windows_client

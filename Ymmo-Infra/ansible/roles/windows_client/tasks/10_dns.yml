@@ -1,0 +1,14 @@
+---
+# Pointe le DNS du client vers le contrôleur de domaine Samba4.
+# Indispensable à la jonction : la résolution des enregistrements SRV
+# (_ldap._tcp.ymmo.lan) doit se faire auprès du DC, pas du résolveur OPNsense.
+
+- name: Configurer le DNS de tous les adaptateurs vers le DC
+  ansible.windows.win_dns_client:
+    adapter_names: "*"
+    dns_servers:
+      - "{{ windows_client_dc_ip }}"
+
+- name: Vérifier la résolution du domaine via le DC
+  ansible.windows.win_command: nslookup {{ windows_client_domain }} {{ windows_client_dc_ip }}
+  changed_when: false

@@ -1,0 +1,32 @@
+---
+# Création idempotente des comptes utilisateurs du domaine AD.
+# La liste samba4_domain_users (defaults/main.yml + group_vars/tag_samba4)
+# décrit les comptes à créer. `samba-tool user create` échoue si le compte
+# existe déjà : on récupère donc d'abord la liste existante et on ne crée que
+# les comptes manquants — sans jamais retoucher le mot de passe d'un compte
+# déjà présent. Le playbook tourne en become: true (samba-tool exige root).
+
+- name: "Users | Lister les comptes du domaine existants"
+  ansible.builtin.command: samba-tool user list
+  register: samba4_existing_users
+  changed_when: false
+
+- name: "Users | Créer les comptes du domaine manquants"
+  # argv (et non une chaîne) : passe chaque argument tel quel, sans
+  # interprétation par un shell — gère les mots de passe à caractères spéciaux.
+  ansible.builtin.command:
+    argv:
+      - samba-tool
+      - user
+      - create
+      - "{{ item.username }}"
+      - "{{ item.password }}"
+      - "--given-name={{ item.given_name | default(item.username) }}"
+      - "--surname={{ item.surname | default('') }}"
+  loop: "{{ samba4_domain_users }}"
+  loop_control:
+    label: "{{ item.username }}"
+  when: item.username not in samba4_existing_users.stdout_lines
+  # no_log : ne jamais écrire les mots de passe dans la sortie Ansible.
+  no_log: true
+  changed_when: true

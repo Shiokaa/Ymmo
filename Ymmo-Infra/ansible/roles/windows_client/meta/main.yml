@@ -1,0 +1,13 @@
+---
+# Métadonnées du rôle windows_client.
+galaxy_info:
+  author: Ymmo
+  description: Configuration des postes clients Windows 11 (DNS + jonction au domaine AD Samba4)
+  license: MIT
+  min_ansible_version: "2.16"
+  platforms:
+    - name: Windows
+      versions:
+        - all
+
+dependencies: []

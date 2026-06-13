@@ -22,3 +22,16 @@ samba4_smb_conf: "/etc/samba/smb.conf"
 # Chemin de la base de données privée Samba (sam.ldb).
 # Son existence indique que le domaine a déjà été provisionné.
 samba4_sam_db: "/var/lib/samba/private/sam.ldb"
+
+# Réseau source autorisé à joindre les services AD (DNS, Kerberos, LDAP, SMB).
+# Couvre tous les sites (10.site.vlan.host) et le backbone WireGuard (10.254.0.0/24).
+samba4_firewall_allowed_network: "10.0.0.0/8"
+
+# Comptes utilisateurs du domaine créés par la tâche 50_users (idempotent).
+# Vide par défaut ; les comptes réels sont déclarés dans group_vars/tag_samba4.
+# Format de chaque entrée :
+#   - username: jdoe
+#     password: "MotDePasseFort1!"   # à mettre dans le vault pour un usage réel
+#     given_name: John               # optionnel (défaut : username)
+#     surname: Doe                   # optionnel
+samba4_domain_users: []

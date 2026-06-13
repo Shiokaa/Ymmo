@@ -1,0 +1,29 @@
+---
+# Ouverture du pare-feu hôte (UFW) pour les services Active Directory.
+# Le template Debian est durci : UFW n'autorise que SSH par défaut — sans ces
+# règles, les clients ne peuvent ni résoudre le DNS du DC, ni s'authentifier
+# (Kerberos/LDAP), ni joindre le domaine (SMB/RPC).
+
+- name: Autoriser les services AD en TCP depuis le réseau interne
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ samba4_firewall_allowed_network }}"
+    port: "53,88,135,139,389,445,464,636,3268,3269"
+    comment: "samba-ad-dc tcp"
+
+- name: Autoriser les services AD en UDP depuis le réseau interne
+  community.general.ufw:
+    rule: allow
+    proto: udp
+    src: "{{ samba4_firewall_allowed_network }}"
+    port: "53,88,123,137,138,389,464"
+    comment: "samba-ad-dc udp"
+
+- name: Autoriser les ports RPC dynamiques en TCP depuis le réseau interne
+  community.general.ufw:
+    rule: allow
+    proto: tcp
+    src: "{{ samba4_firewall_allowed_network }}"
+    port: "49152:65535"
+    comment: "samba-ad-dc rpc dynamique"

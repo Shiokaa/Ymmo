@@ -1,0 +1,26 @@
+---
+# Variables de groupe pour les postes clients Windows (tag : client).
+# Transport : OpenSSH (installé dans le template Packer) — contrairement à
+# WinRM, SSH supporte le ProxyJump à travers le bastion WireGuard.
+# Le mot de passe admin AD est chargé depuis le vault Ansible :
+#   vault_samba4_admin_password (déjà utilisé par le rôle samba4).
+
+# Compte local d'administration créé par le build Packer et re-déclaré
+# dans l'unattend Sysprep (voir packer/scripts/windows-sysprep.ps1).
+ansible_user: packer
+
+# Les sessions SSH Windows ouvrent PowerShell (DefaultShell du template) :
+# indispensable pour que les modules ansible.windows/microsoft.ad fonctionnent.
+ansible_shell_type: powershell
+
+# Jump host WireGuard : SSH tunnelisé via le Bastion pour atteindre le VLAN 20.
+# UserKnownHostsFile=/dev/null : évite le blocage sur mismatch de clé après un rebuild Terraform.
+ansible_ssh_common_args: "-o ProxyJump=sysadmin@{{ hostvars[groups['tag_bastion'][0]]['ansible_host'] }} -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"
+
+# Realm et DC cibles pour la jonction au domaine (mêmes valeurs que tag_samba4).
+windows_client_domain: "ymmo.lan"
+windows_client_dc_ip: "10.0.10.1"
+
+# Compte administrateur du domaine Samba4 (format UPN) + mot de passe vault.
+windows_client_domain_admin: "Administrator@YMMO.LAN"
+windows_client_domain_password: "{{ vault_samba4_admin_password }}"

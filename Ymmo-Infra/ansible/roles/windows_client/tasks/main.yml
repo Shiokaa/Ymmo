@@ -1,0 +1,15 @@
+---
+# Point d'entrée du rôle windows_client.
+# Ordre : vérifications → DNS → jonction au domaine → contrôle final.
+
+- name: Vérifier les prérequis
+  ansible.builtin.import_tasks: 00_assert.yml
+
+- name: Configurer le DNS vers le contrôleur de domaine
+  ansible.builtin.import_tasks: 10_dns.yml
+
+- name: Renommer la machine et rejoindre le domaine
+  ansible.builtin.import_tasks: 20_join.yml
+
+- name: Contrôler la jonction au domaine
+  ansible.builtin.import_tasks: 99_smoke.yml

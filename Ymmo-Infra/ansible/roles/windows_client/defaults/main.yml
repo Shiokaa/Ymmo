@@ -1,0 +1,17 @@
+---
+# Valeurs par défaut du rôle windows_client.
+# Les valeurs réseau/domaine réelles sont définies dans group_vars/tag_client.
+
+# Domaine AD à rejoindre et serveur DNS (le DC Samba4 fait autorité sur la zone).
+windows_client_domain: "ymmo.lan"
+windows_client_dc_ip: "10.0.10.1"
+
+# Compte administrateur du domaine (format UPN) et son mot de passe (vault).
+windows_client_domain_admin: "Administrator@YMMO.LAN"
+windows_client_domain_password: ""
+
+# Nom NetBIOS de la machine (≤ 15 caractères). Par défaut : nom de la VM Proxmox.
+windows_client_hostname: "{{ inventory_hostname | upper | truncate(15, true, '') }}"
+
+# Délai max (secondes) pour que le clone termine son premier boot (OOBE sysprep).
+windows_client_boot_timeout: 900

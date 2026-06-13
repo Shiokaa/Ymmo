@@ -1,0 +1,23 @@
+---
+# Renommage de la machine puis jonction au domaine Active Directory Samba4.
+# Le renommage est fait AVANT la jonction pour éviter un double reboot
+# et un objet ordinateur AD au mauvais nom.
+
+- name: Renommer la machine (nom NetBIOS dérivé du nom de la VM)
+  ansible.windows.win_hostname:
+    name: "{{ windows_client_hostname }}"
+  register: windows_client_rename
+
+- name: Redémarrer après renommage
+  ansible.windows.win_reboot:
+    reboot_timeout: "{{ windows_client_boot_timeout }}"
+  when: windows_client_rename.reboot_required
+
+- name: Rejoindre le domaine {{ windows_client_domain }}
+  microsoft.ad.membership:
+    dns_domain_name: "{{ windows_client_domain }}"
+    domain_admin_user: "{{ windows_client_domain_admin }}"
+    domain_admin_password: "{{ windows_client_domain_password }}"
+    state: domain
+    reboot: true
+  register: windows_client_join
