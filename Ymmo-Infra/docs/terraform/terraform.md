@@ -7,6 +7,7 @@ construits par Packer et instancie toutes les VMs du projet sur Proxmox.
 1. Packer     → Templates disponibles sur Proxmox
                   - ID 9000 : Debian 12 durci (serveurs applicatifs)
                   - ID 9001 : OPNsense 26.1 (routeur / pare-feu)
+                  - ID 9002 : Windows 11 25H2 (postes clients, OpenSSH)
 
 2. Terraform  → Clone des templates, création des VMs
                   - Provider bpg/proxmox ~> 0.100
@@ -21,7 +22,7 @@ construits par Packer et instancie toutes les VMs du projet sur Proxmox.
 ## Prérequis
 
 - Proxmox opérationnel avec un token API valide
-- Templates Packer construits (IDs 9000 et 9001)
+- Templates Packer construits (IDs 9000, 9001, et 9002 pour les clients Windows)
 - SSH agent actif et clé chargée (`ssh-add`) — requis pour l'upload des snippets cloud-init
 - Fichier `terraform/terraform.tfvars` configuré (copier depuis `terraform.tfvars.example`) :
 
@@ -46,6 +47,7 @@ terraform/
 ├── terraform.tfvars   # Valeurs secrètes (gitignore)
 ├── zone-infra.tf      # Zone Infrastructure : OPNsense, Samba4-DC1, Bastion
 ├── zone-agences.tf    # Zone Agences : endpoints WireGuard Agences 01 et 02
+├── zone-clients.tf    # Zone Clients : postes Windows 11 (clone 9002, DHCP, flag deploy_clients)
 └── modules/
     └── vm/            # Module générique de création de VM
         ├── main.tf
@@ -139,6 +141,11 @@ comportements suivants :
 | `user_data_template` | string | null | Chemin vers le template cloud-init `.tftpl` |
 | `user_data_vars` | any | `{}` | Variables injectées dans le template |
 | `snippet_datastore` | string | `local` | Datastore pour l'upload du snippet |
+| `bios` | string | null | Firmware (`seabios`/`ovmf`) ; null = hérite du template. Windows : `ovmf` |
+| `machine` | string | null | Type machine QEMU (ex. `q35`) ; null = hérite. Windows : `q35` |
+| `disk_interface` | string | `virtio0` | Interface du disque — doit matcher le template. Windows : `sata0` |
+| `disk_iothread` | bool | `true` | iothread (virtio/scsi only) ; `false` pour sata (Windows) |
+| `enable_cloud_init` | bool | `true` | Génère le bloc `initialization` ; `false` pour les templates sans cloud-init (Windows, IP via DHCP) |
 
 ### Cloud-init par snippets
 

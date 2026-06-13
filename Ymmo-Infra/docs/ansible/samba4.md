@@ -95,9 +95,11 @@ Le playbook cible `hosts: tag_samba4` avec `become: true` et `gather_facts: fals
 
 ## Séquence de tâches
 
-### `00_assert.yml` — Validation des prérequis
+### `00_assert.yml` — Attente de connexion + validation des prérequis
 
-Vérifie les variables avant toute action destructive. Les assertions suivantes doivent passer :
+La **première** tâche est un `wait_for_connection` (timeout 120 s, retry toutes les 5 s) : elle attend que le DC soit réellement joignable en SSH avant toute autre action. Sur un déploiement *from scratch*, sans cette attente, la 1re tâche réelle échoue avec `Connection closed by UNKNOWN port 65535` si le DC finit encore son boot/cloud-init **ou** si le tunnel WireGuard bastion↔OPNsense n'a pas encore fait son handshake (lazy, déclenché par le 1er paquet — qui peut être perdu le temps de la négociation). Les `assert` seuls ne testent pas la connexion (ils s'exécutent côté contrôleur).
+
+Ensuite, vérifie les variables avant toute action destructive. Les assertions suivantes doivent passer :
 
 | Assertion | Règle de validation |
 |-----------|-------------------|
@@ -168,6 +170,23 @@ Masque les services incompatibles avec le mode AD DC (`smbd`, `nmbd`, `winbind`)
 
 Active et démarre `samba-ad-dc` avec `daemon_reload: true`.
 
+### `50_users.yml` — Création des comptes utilisateurs du domaine
+
+Crée les comptes de domaine déclarés dans `samba4_domain_users` (tag `users`), de façon **idempotente** :
+
+1. `samba-tool user list` → liste les comptes existants (`changed_when: false`).
+2. `samba-tool user create <username> <password> --given-name=… --surname=…` pour chaque entrée **absente** de la liste (`when: item.username not in …stdout_lines`).
+
+La création utilise la forme `argv` (chaque argument passé tel quel, sans shell — gère les mots de passe à caractères spéciaux) et `no_log: true` (les mots de passe n'apparaissent jamais dans la sortie). Un compte déjà présent n'est jamais recréé ni réinitialisé.
+
+Création/ajout ciblé sans rejouer tout le rôle :
+
+```bash
+ansible-playbook ansible/playbooks/samba4.yml --ask-vault-pass --tags users
+```
+
+> Pour ajouter d'autres comptes, étendre la liste `samba4_domain_users` (voir Variables) et relancer.
+
 ### `99_smoke.yml` — Tests de fumée post-configuration
 
 | Test | Commande | Ce qu'il vérifie |
@@ -198,6 +217,20 @@ Toutes les variables sont définies dans `ansible/inventory/group_vars/tag_samba
 | `samba4_admin_password` | `{{ vault_samba4_admin_password }}` | `group_vars/tag_samba4` | Mot de passe Administrator — chargé depuis le vault |
 | `samba4_smb_conf` | `/etc/samba/smb.conf` | `defaults/main.yml` | Chemin de smb.conf |
 | `samba4_sam_db` | `/var/lib/samba/private/sam.ldb` | `defaults/main.yml` | Marqueur d'idempotence du provisionnement |
+| `samba4_firewall_allowed_network` | `10.0.0.0/8` | `defaults/main.yml` | Réseau source autorisé sur les services AD (DNS, Kerberos, LDAP, SMB) |
+| `samba4_domain_users` | liste (voir ci-dessous) | `defaults` (vide) + `group_vars/tag_samba4` | Comptes de domaine créés par `50_users` |
+
+`samba4_domain_users` est vide par défaut (`defaults/main.yml`) ; les comptes réels sont déclarés dans `group_vars/tag_samba4/main.yml`. Format de chaque entrée :
+
+```yaml
+samba4_domain_users:
+  - username: testuser
+    password: "Test@Ymmo2026!"   # homelab : en clair ; usage réel → vault
+    given_name: Test              # optionnel (défaut : username)
+    surname: User                 # optionnel
+```
+
+> Le mot de passe doit respecter la politique de complexité AD (≥ 7 car., majuscule + minuscule + chiffre + caractère spécial). Pour un usage réel, le déplacer dans le vault (`password: "{{ vault_testuser_password }}"`).
 
 ---
 
@@ -335,6 +368,7 @@ Vérifier dans l'ordre :
 | `ansible/roles/samba4/tasks/20_provision.yml` | Provisionnement AD via `samba-tool domain provision` (idempotent) |
 | `ansible/roles/samba4/tasks/30_config.yml` | krb5.conf, DNS forwarder, désactivation systemd-resolved |
 | `ansible/roles/samba4/tasks/40_service.yml` | Masquage smbd/nmbd/winbind, activation samba-ad-dc |
+| `ansible/roles/samba4/tasks/50_users.yml` | Création idempotente des comptes de domaine (`samba4_domain_users`) |
 | `ansible/roles/samba4/tasks/99_smoke.yml` | Tests de fumée : domain info, DNS, liste utilisateurs |
 | `ansible/roles/samba4/handlers/main.yml` | Handler de redémarrage samba-ad-dc |
 | `ansible/inventory/group_vars/tag_samba4/main.yml` | Variables du groupe : ProxyJump, realm, IP, mot de passe vault |

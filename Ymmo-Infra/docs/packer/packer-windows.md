@@ -135,6 +135,32 @@ Création VM → boot sur ISO Windows (ide2)
               → arrêt VM → conversion en template 9002
 ```
 
+### Le provisioner final `windows-sysprep.ps1`
+
+C'est le dernier script exécuté via WinRM avant le sysprep. Il prépare l'image pour le **clonage** (Terraform) et bascule le transport des clones de WinRM vers **SSH** :
+
+| Étape | Action | Pourquoi |
+|---|---|---|
+| 1 | Détecte le lecteur CD virtio-win | Source des pilotes + agent QEMU |
+| 2 | Installe l'agent QEMU (`qemu-ga-x64.msi`) | Proxmox découvre l'IP du clone via l'agent |
+| 3 | Injecte les pilotes VirtIO dans le driver store (`pnputil /add-driver`) | Les périphériques virtio se lient automatiquement au boot d'un clone |
+| 4 | Installe **OpenSSH Server** + service `sshd` (auto) + `DefaultShell`=PowerShell + règle pare-feu TCP/22 (`-Profile Any`) | **Transport Ansible des clones** : contrairement à WinRM, SSH supporte le ProxyJump à travers le bastion WireGuard |
+| 5 | Désactive les règles pare-feu WinRM | Évite une reconnexion Packer pendant le shutdown du sysprep |
+| 6 | Écrit `unattend.xml` (OOBE FR, re-déclaration du compte local `packer`) | Les clones terminent l'OOBE sans interaction |
+| 7 | Lance `sysprep /generalize /oobe /shutdown` | Généralise l'image → Packer convertit en template |
+
+> **WinRM vs SSH — ne pas confondre les deux transports :**
+> - **WinRM (HTTPS/5986)** = transport *du build Packer* uniquement (provisioners).
+> - **OpenSSH (22)** = transport *des clones* par Ansible (rôle `windows_client`), via le bastion.
+>
+> OpenSSH **survit au `sysprep /generalize`** (vérifié : `sshd.exe` présent, service `Running`, port 22 en écoute sur le clone). Pas besoin de l'installer en `SetupComplete.cmd`.
+
+#### Injection des pilotes : `w11\amd64` uniquement (perf)
+
+L'ISO virtio-win contient une variante de **chaque** pilote pour **toutes** les versions Windows (`xp`, `2k8`, `w7`, `w8`, `w10`, `w11`) et **toutes** les archis (`amd64`, `x86`, `ARM64`), soit ~328 paquets. Injecter `*.inf /subdirs /install` les balayait tous → **~30 min de build** avec des centaines d'« Échec » normaux (pilote non applicable).
+
+Le script ne cible donc que les sous-dossiers `w11\amd64` (≈20 INF, tous pertinents) et **retire `/install`** (`/add-driver` seul *stage* le pilote dans le store, suffisant pour un template) → **build ramené à ~5 min**, sans régression. Le pilote `vioserial\w11\amd64\vioser.inf` (canal de l'agent QEMU) reste bien dans le lot ciblé.
+
 ## 7. Variables
 
 Définies dans `variables-windows.pkr.hcl`, valeurs dans `variables.pkrvars.hcl` :
@@ -172,6 +198,8 @@ Les six blocages rencontrés lors de la mise au point, du premier au dernier :
 | `500 QEMU guest agent is not running` (alors que le service tourne) | Drivers VirtIO incomplets avant reboot → canal virtio-serial KO | Reboot après install des drivers (Order 3) |
 | `401 - invalid content type` | `AllowUnencrypted` verrouillé (policy) + NTLM mal supporté par la lib Go | Listener **HTTPS** + Basic over TLS |
 | Port WinRM en `i/o timeout` après coup | Profil réseau basculé en Public → pare-feu restreint | Profil forcé en Private + règle FW `-Profile Any` |
+| Build très long (~30 min), « bloqué » sur OpenSSH | Injection de tout le catalogue virtio (`*.inf /subdirs /install`) + téléchargement du FOD OpenSSH depuis Windows Update | Pilotes ciblés `w11\amd64` sans `/install` (voir §6) ; le téléchargement du FOD est ponctuel et normal |
+| Clone Windows injoignable en SSH (`:22` timeout), l'agent QEMU montre `OpenSSH.Server = NotPresent` | Template construit **avant** l'ajout de la section OpenSSH au script | Reconstruire le template (`./ymmo.sh packer build windows`) puis recloner la VM (Terraform) |
 
 ### Inspecter une VM de build bloquée
 
