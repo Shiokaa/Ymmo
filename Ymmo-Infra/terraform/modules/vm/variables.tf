@@ -101,3 +101,33 @@ variable "snippet_datastore" {
   type        = string
   default     = "local"
 }
+
+variable "bios" {
+  description = "Firmware de la VM (seabios ou ovmf). null = hérite du template cloné"
+  type        = string
+  default     = null
+}
+
+variable "machine" {
+  description = "Type de machine QEMU (ex: q35). null = hérite du template cloné"
+  type        = string
+  default     = null
+}
+
+variable "disk_interface" {
+  description = "Interface du disque principal — doit correspondre au disque du template cloné"
+  type        = string
+  default     = "virtio0"
+}
+
+variable "disk_iothread" {
+  description = "Active iothread sur le disque (virtio/scsi uniquement — désactiver pour sata)"
+  type        = bool
+  default     = true
+}
+
+variable "enable_cloud_init" {
+  description = "Génère le bloc initialization (cloud-init). Désactiver pour les templates sans cloud-init (ex: Windows, IP via DHCP)"
+  type        = bool
+  default     = true
+}

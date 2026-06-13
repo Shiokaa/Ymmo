@@ -38,6 +38,12 @@ resource "proxmox_virtual_environment_vm" "this" {
   description = var.description
   tags        = var.tags
 
+  # Firmware et type de machine : null = la valeur du template cloné est
+  # conservée. Les clones Windows UEFI doivent passer bios="ovmf"/machine="q35"
+  # explicitement (les disques EFI et TPM sont hérités du clone sans être gérés).
+  bios    = var.bios
+  machine = var.machine
+
   agent {
     enabled = true
   }
@@ -59,9 +65,9 @@ resource "proxmox_virtual_environment_vm" "this" {
   disk {
     datastore_id = var.storage_id
     size         = var.disk_size
-    interface    = "virtio0"
+    interface    = var.disk_interface
     discard      = "on"
-    iothread     = true
+    iothread     = var.disk_iothread
     file_format  = "raw"
   }
 
@@ -76,15 +82,20 @@ resource "proxmox_virtual_environment_vm" "this" {
     }
   }
 
-  initialization {
-    user_data_file_id = var.user_data_template != null ? proxmox_virtual_environment_file.user_data[0].id : null
+  # Bloc cloud-init optionnel : absent pour les templates sans cloud-init
+  # (ex: Windows) afin de ne pas attacher de lecteur cloud-init inutile.
+  dynamic "initialization" {
+    for_each = var.enable_cloud_init ? [1] : []
+    content {
+      user_data_file_id = var.user_data_template != null ? proxmox_virtual_environment_file.user_data[0].id : null
 
-    dynamic "ip_config" {
-      for_each = var.ipv4_config != null ? [var.ipv4_config] : []
-      content {
-        ipv4 {
-          address = ip_config.value.address
-          gateway = ip_config.value.gateway
+      dynamic "ip_config" {
+        for_each = var.ipv4_config != null ? [var.ipv4_config] : []
+        content {
+          ipv4 {
+            address = ip_config.value.address
+            gateway = ip_config.value.gateway
+          }
         }
       }
     }
