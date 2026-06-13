@@ -66,7 +66,12 @@ autounattend_iso_file = "Backup-Node1:iso/autounattend.iso"
 # Credentials WinRM utilisés pendant le build Packer
 # IMPORTANT : winrm_password doit correspondre exactement au mot de passe
 # encodé dans packer/autounattend/Autounattend.xml (champ <Password> du
-# compte "packer"). Ces credentials sont jetables et propres au build ;
-# ils ne sont pas conservés dans le template final après sysprep.
+# compte "packer"). Ce compte est re-déclaré dans l'unattend Sysprep :
+# il reste le compte d'administration local des clones (utilisé par Ansible).
 winrm_username = "packer"
 winrm_password = "Packer-Build-2026!"
+
+# Clé publique SSH autorisée pour les administrateurs des clones Windows.
+# Les clones sont pilotés par Ansible via OpenSSH (ProxyJump bastion) ;
+# mettre ici la même clé que pour les VMs Debian. Vide = mot de passe seul.
+windows_ssh_authorized_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC... votre-cle-publique-1"

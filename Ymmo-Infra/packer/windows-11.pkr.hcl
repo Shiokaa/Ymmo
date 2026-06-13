@@ -140,6 +140,13 @@ build {
     # tâche planifiée — requis pour Sysprep. Le compte packer est admin local.
     elevated_user     = var.winrm_username
     elevated_password = var.winrm_password
-    scripts           = ["scripts/windows-sysprep.ps1"]
+    # Variables consommées par windows-sysprep.ps1 : compte local re-déclaré
+    # dans l'unattend Sysprep + clé SSH autorisée pour Ansible sur les clones.
+    environment_vars = [
+      "PACKER_BUILD_USERNAME=${var.winrm_username}",
+      "PACKER_BUILD_PASSWORD=${var.winrm_password}",
+      "SSH_AUTHORIZED_KEY=${var.windows_ssh_authorized_key}",
+    ]
+    scripts = ["scripts/windows-sysprep.ps1"]
   }
 }

@@ -74,3 +74,9 @@ variable "winrm_password" {
   sensitive   = true
   description = "Mot de passe WinRM — doit correspondre au compte créé dans Autounattend.xml"
 }
+
+variable "windows_ssh_authorized_key" {
+  type        = string
+  default     = ""
+  description = "Clé publique SSH autorisée pour les administrateurs des clones (transport Ansible). Vide = authentification par mot de passe uniquement."
+}
