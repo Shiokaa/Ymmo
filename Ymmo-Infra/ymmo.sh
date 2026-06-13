@@ -52,7 +52,12 @@ usage() {
     echo "  ansible wireguard  [options]       Déployer WireGuard complet (OPNsense + agences)"
     echo "  ansible bastion    [options]       Reconfigurer le bastion uniquement"
     echo "  ansible samba4     [options]       Configurer Samba4 AD DC"
-    echo "  ansible deploy     [options]       Enchaîner tous les playbooks (setup→samba4)"
+    echo "  ansible windows    [options]       Configurer les clients Windows (DNS + jonction AD)"
+    echo "  ansible deploy     [options]       Enchaîner tous les playbooks (setup→windows)"
+    echo ""
+    echo -e "${BOLD}${YELLOW}Déploiement complet${NC}"
+    echo "  full-deploy        [--auto-approve]  Tout déployer en une commande :"
+    echo "                                       TF (infra) → Ansible (réseau/AD) → TF (client) → Ansible (jonction)"
     echo ""
     echo -e "${BOLD}${YELLOW}Packer${NC}"
     echo "  packer init                        Initialiser les plugins Packer"
@@ -169,16 +174,24 @@ cmd_ansible() {
         network)    run_ansible opnsense_network.yml  "$@" ;;
         wireguard)  run_ansible wireguard.yml         "$@" ;;
         samba4)     run_ansible samba4.yml            "$@" ;;
+        windows)    run_ansible windows_client.yml    "$@" ;;
 
         # --limit Bastion est injecté en premier ; l'utilisateur peut le surcharger
         bastion)    run_ansible wireguard.yml --limit Bastion "$@" ;;
 
         deploy)
+            # Déploiement complet en une commande : collections à jour puis
+            # enchaînement de tous les playbooks (un seul prompt vault).
+            check_venv
+            log "Installation des collections Ansible Galaxy..."
+            (cd "$ANSIBLE_DIR" && "$VENV_BIN/ansible-galaxy" collection install \
+                -r collections/requirements.yml --upgrade)
             run_ansible \
                 opnsense_setup.yml \
                 opnsense_network.yml \
                 wireguard.yml \
                 samba4.yml \
+                windows_client.yml \
                 "$@"
             ;;
 
@@ -357,6 +370,47 @@ cmd_clean() {
     log "Nettoyage terminé."
 }
 
+# ─── Déploiement complet ─────────────────────────────────────────────────────
+
+# Déploie toute l'infrastructure en une commande, en 4 phases ordonnées.
+# Le phasage est imposé par une dépendance croisée : le client Windows obtient
+# son IP via le DHCP d'OPNsense (configuré par Ansible), et le provider
+# Terraform attend cette IP (guest agent) pour terminer la création de la VM.
+cmd_full_deploy() {
+    local auto_approve=false
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --auto-approve) auto_approve=true; shift ;;
+            *) die "Option inconnue : $1 (full-deploy n'accepte que --auto-approve)" ;;
+        esac
+    done
+
+    check_venv
+    local tf_apply=(terraform apply -var-file="terraform.tfvars")
+    $auto_approve && tf_apply+=(-auto-approve)
+
+    log "═══ Phase 1/4 — Terraform : infrastructure (sans clients Windows) ═══"
+    (cd "$TF_DIR" && "${tf_apply[@]}" -var="deploy_clients=false")
+
+    log "═══ Phase 2/4 — Ansible : OPNsense, réseau/DHCP, WireGuard, Samba4 ═══"
+    log "Installation des collections Ansible Galaxy..."
+    (cd "$ANSIBLE_DIR" && "$VENV_BIN/ansible-galaxy" collection install \
+        -r collections/requirements.yml --upgrade)
+    run_ansible \
+        opnsense_setup.yml \
+        opnsense_network.yml \
+        wireguard.yml \
+        samba4.yml
+
+    log "═══ Phase 3/4 — Terraform : client Windows (DHCP désormais actif) ═══"
+    (cd "$TF_DIR" && "${tf_apply[@]}")
+
+    log "═══ Phase 4/4 — Ansible : jonction du client au domaine AD ═══"
+    run_ansible windows_client.yml
+
+    log "═══ Déploiement complet terminé ✓ ═══"
+}
+
 # ─── Point d'entrée ──────────────────────────────────────────────────────────
 
 main() {
@@ -369,6 +423,7 @@ main() {
         ansible)      cmd_ansible "$@" ;;
         packer)       cmd_packer  "$@" ;;
         tf)           cmd_tf      "$@" ;;
+        full-deploy)  cmd_full_deploy "$@" ;;
         clean)        cmd_clean ;;
         help|-h|--help) usage ;;
         *) die "Commande inconnue : '$cmd'. Lance '$0 help' pour l'aide." ;;
