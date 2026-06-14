@@ -3,6 +3,8 @@ package com.ymmo.controllers;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -11,7 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ymmo.dtos.authentication.LoginResponse;
 import com.ymmo.dtos.authentication.LoginUserDto;
 import com.ymmo.dtos.authentication.RegisterUserDto;
+import com.ymmo.dtos.user.UserResponseDto;
 import com.ymmo.entities.User;
+import com.ymmo.mappers.UserMapper;
 import com.ymmo.response.GlobalResponse;
 import com.ymmo.services.AuthenticationService;
 import com.ymmo.services.JwtService;
@@ -29,10 +33,13 @@ public class AuthenticationController {
     private int jwtExpiration;
 
     private final AuthenticationService authenticationService;
+    private final UserMapper userMapper;
 
-    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService) {
+    public AuthenticationController(JwtService jwtService, AuthenticationService authenticationService,
+            UserMapper userMapper) {
         this.jwtService = jwtService;
         this.authenticationService = authenticationService;
+        this.userMapper = userMapper;
     }
 
     @PostMapping("/register")
@@ -81,5 +88,10 @@ public class AuthenticationController {
         }
 
         return new ResponseEntity<>(GlobalResponse.success(null), HttpStatus.OK);
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<GlobalResponse<UserResponseDto>> me(@AuthenticationPrincipal User user) {
+        return new ResponseEntity<>(GlobalResponse.success(userMapper.toDto(user)), HttpStatus.OK);
     }
 }

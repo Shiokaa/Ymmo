@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import com.ymmo.dtos.user.UserResponseDto;
 import com.ymmo.dtos.user.UserUpdatePasswordDto;
 import com.ymmo.dtos.user.UserUpdateProfilDto;
+import com.ymmo.dtos.user.UserUpdateRoleDto;
 import com.ymmo.entities.User;
 import com.ymmo.exceptions.BadRequestException;
 import com.ymmo.exceptions.EmailAlreadyExistsException;
@@ -90,5 +91,15 @@ public class UserService {
 
         userRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
         userRepository.deleteById(uuid);
+    }
+
+    public UserResponseDto updateUserRoleById(String id, UserUpdateRoleDto input) {
+        UUID uuid = ConvertType.stringToUuid(id);
+
+        User user = userRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+        user.setRole(input.getRole());
+        user = userRepository.save(user);
+
+        return userMapper.toDto(user);
     }
 }

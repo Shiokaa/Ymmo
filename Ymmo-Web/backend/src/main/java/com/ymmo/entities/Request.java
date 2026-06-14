@@ -1,29 +1,26 @@
 package com.ymmo.entities;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.persistence.EntityListeners;
-
-import com.ymmo.enums.UserRole;
+import com.ymmo.enums.RequestStatus;
+import com.ymmo.enums.RequestType;
 
 import jakarta.annotation.Nullable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
@@ -34,37 +31,42 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "users")
+@Table(name = "requests")
 @EntityListeners(AuditingEntityListener.class)
-@Getter
 @Setter
+@Getter
 @NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @Builder
-public class User implements UserDetails {
-
+public class Request {
     // Génération d'un UUID automatiquement
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Setter(AccessLevel.NONE)
     private UUID id;
 
+    @ManyToOne
+    @JoinColumn(name = "property_id")
     @NotNull
-    private String firstName;
+    private Property property;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
     @NotNull
-    private String lastName;
-    @NotNull
-    @Column(unique = true)
-    private String email;
-    @NotNull
-    private String passwordHash;
-    @NotNull
-    private String phone;
+    private User user;
+
     @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(columnDefinition = "varchar(50) DEFAULT 'USER'")
+    private RequestType type;
+
+    @NotNull
+    @Column(columnDefinition = "TEXT")
+    private String message;
+
+    @NotNull
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "varchar(50) DEFAULT 'PENDING'")
     @Builder.Default
-    private UserRole role = UserRole.USER;
+    private RequestStatus status = RequestStatus.PENDING;
 
     @CreatedDate
     @NotNull
@@ -74,39 +76,4 @@ public class User implements UserDetails {
     private LocalDateTime updatedAt;
     @Nullable
     private LocalDateTime deletedAt;
-
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
-    }
-
-    public String getPassword() {
-        return passwordHash;
-    }
-
-    @Override
-    public String getUsername() {
-        return email;
-    }
-
-    @Override
-    public boolean isAccountNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isAccountNonLocked() {
-        return true;
-    }
-
-    @Override
-    public boolean isCredentialsNonExpired() {
-        return true;
-    }
-
-    @Override
-    public boolean isEnabled() {
-        return true;
-    }
-
 }

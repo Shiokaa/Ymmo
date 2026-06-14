@@ -15,11 +15,17 @@ import com.ymmo.dtos.property.PropertyResponseDto;
 import com.ymmo.entities.Agency;
 import com.ymmo.entities.Property;
 import com.ymmo.entities.PropertyImage;
+import com.ymmo.entities.User;
+import com.ymmo.enums.UserRole;
 import com.ymmo.exceptions.ResourceNotFound;
 import com.ymmo.repositories.AgencyRepository;
 import com.ymmo.repositories.PropertyImageRepository;
 import com.ymmo.repositories.PropertyRepository;
+import com.ymmo.repositories.StaffAgencyRepository;
 import com.ymmo.utils.ConvertType;
+
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -32,6 +38,19 @@ public class PropertyService {
     private final AgencyRepository agencyRepository;
     private final PropertyImageRepository propertyImageRepository;
     private final FileUploadService fileUploadService;
+    private final StaffAgencyRepository staffAgencyRepository;
+
+    private void assertCanManageAgency(UUID agencyId) {
+        User current = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+
+        if (current.getRole() == UserRole.ADMIN) {
+            return;
+        }
+
+        if (!staffAgencyRepository.existsByUser_IdAndAgency_Id(current.getId(), agencyId)) {
+            throw new AccessDeniedException("NOT_YOUR_AGENCY");
+        }
+    }
 
     public List<PropertyResponseDto> getAllProperties() {
         List<Property> properties = propertyRepository.findAllWithAgencyAndImages();
@@ -48,6 +67,8 @@ public class PropertyService {
     }
 
     public PropertyResponseDto createProperty(PropertyRequestDto input) {
+        assertCanManageAgency(input.getAgencyId());
+
         Agency agency = agencyRepository.findById(input.getAgencyId()).orElseThrow(ResourceNotFound::new);
 
         Property property = propertyMapper.fromDto(input);
@@ -61,6 +82,8 @@ public class PropertyService {
         UUID uuid = ConvertType.stringToUuid(id);
 
         Property property = propertyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        assertCanManageAgency(property.getAgency().getId());
 
         String propertyImagePath = ServletUriComponentsBuilder.fromContextPath(request).path("/uploads/")
                 .path(fileUploadService.fileUpload(file)).toUriString();
@@ -79,9 +102,15 @@ public class PropertyService {
     public PropertyResponseDto updatePropertyById(PropertyRequestDto input, String id) {
         UUID uuid = ConvertType.stringToUuid(id);
 
+        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new);
+
+        assertCanManageAgency(property.getAgency().getId());
+        if (!property.getAgency().getId().equals(input.getAgencyId())) {
+            assertCanManageAgency(input.getAgencyId());
+        }
+
         Agency agency = agencyRepository.findById(input.getAgencyId()).orElseThrow(ResourceNotFound::new);
 
-        Property property = propertyRepository.findByIdWithAgencyAndImages(uuid).orElseThrow(ResourceNotFound::new);
         property.setAgency(agency);
 
         return propertyMapper.toDto(propertyRepository.save(property));
@@ -91,6 +120,8 @@ public class PropertyService {
         UUID uuid = ConvertType.stringToUuid(id);
 
         Property property = propertyRepository.findById(uuid).orElseThrow(ResourceNotFound::new);
+
+        assertCanManageAgency(property.getAgency().getId());
 
         propertyRepository.delete(property);
     }
@@ -104,6 +135,8 @@ public class PropertyService {
         if (!propertyImage.getProperty().getId().equals(propertyUuid)) {
             throw new IllegalArgumentException();
         }
+
+        assertCanManageAgency(propertyImage.getProperty().getAgency().getId());
 
         propertyImageRepository.delete(propertyImage);
     }
