@@ -1,0 +1,6 @@
+/* Les styles du footer sont globaux (src/styles.css) : ils font partie du design system. */
+
+.footer-langs {
+  display: flex;
+  gap: 18px;
+}

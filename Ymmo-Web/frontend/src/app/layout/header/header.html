@@ -1,0 +1,151 @@
+<header class="header" [class.scrolled]="scrolled()">
+  <div class="container header-inner">
+    <a routerLink="/" class="logo" aria-label="Ymmo"> Ymmo<span class="logo-dot">.</span> </a>
+
+    <nav class="nav" aria-label="Navigation principale">
+      <a routerLink="/search" class="active">Acheter</a>
+      <a routerLink="/agencies">Agences</a>
+      <a routerLink="/estimate">Estimer mon bien</a>
+    </nav>
+
+    <div class="header-cta">
+      <a routerLink="/favorites" class="fav-link desktop-only" aria-label="Mes favoris">
+        <i class="pi pi-heart"></i>
+        @if (favoritesCount() > 0) {
+          <span class="fav-badge">{{ favoritesCount() }}</span>
+        }
+      </a>
+      @if (!isAuthenticated()) {
+        <p-button
+          class="desktop-only"
+          label="Se connecter"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          routerLink="/auth/login"
+        />
+        <p-button
+          class="desktop-only"
+          label="S'inscrire"
+          severity="contrast"
+          [outlined]="true"
+          [rounded]="true"
+          routerLink="/auth/register"
+        />
+      } @else {
+        @if (isPro()) {
+          <p-button
+            class="desktop-only"
+            label="Espace pro"
+            icon="pi pi-briefcase"
+            severity="secondary"
+            [text]="true"
+            [rounded]="true"
+            routerLink="/agent"
+          />
+        }
+        <a routerLink="/profile" class="desktop-only user-greeting">{{
+          currentUser()?.firstName
+        }}</a>
+        <p-button
+          class="desktop-only"
+          label="Déconnexion"
+          severity="secondary"
+          [text]="true"
+          [rounded]="true"
+          (onClick)="logout()"
+        />
+      }
+      <button
+        type="button"
+        class="menu-btn mobile-only"
+        aria-label="Ouvrir le menu"
+        [attr.aria-expanded]="menuOpen()"
+        (click)="openMenu()"
+      >
+        <i class="pi pi-bars"></i>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Tiroir de navigation mobile -->
+<div
+  class="drawer-backdrop"
+  [class.open]="menuOpen()"
+  (click)="closeMenu()"
+  aria-hidden="true"
+></div>
+<aside
+  class="drawer"
+  [class.open]="menuOpen()"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Menu de navigation"
+>
+  <div class="drawer-head">
+    <span class="logo">Ymmo<span class="logo-dot">.</span></span>
+    <button type="button" class="drawer-close" aria-label="Fermer le menu" (click)="closeMenu()">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+  <nav aria-label="Navigation mobile">
+    <a routerLink="/search" class="active" (click)="closeMenu()">Acheter</a>
+    <a routerLink="/agencies" (click)="closeMenu()">Agences</a>
+    <a routerLink="/estimate" (click)="closeMenu()">Estimer mon bien</a>
+    <a routerLink="/favorites" (click)="closeMenu()">
+      Mes favoris
+      @if (favoritesCount() > 0) {
+        <span class="fav-badge">{{ favoritesCount() }}</span>
+      }
+    </a>
+    @if (isAuthenticated()) {
+      <a routerLink="/my-requests" (click)="closeMenu()">Mes demandes</a>
+      <a routerLink="/my-transactions" (click)="closeMenu()">Mes démarches</a>
+    }
+  </nav>
+  <div class="drawer-actions">
+    @if (!isAuthenticated()) {
+      <p-button
+        label="S'inscrire"
+        [rounded]="true"
+        styleClass="w-full"
+        routerLink="/auth/register"
+      />
+      <p-button
+        label="Se connecter"
+        severity="contrast"
+        [outlined]="true"
+        [rounded]="true"
+        styleClass="w-full"
+        routerLink="/auth/login"
+      />
+    } @else {
+      @if (isPro()) {
+        <p-button
+          label="Espace pro"
+          icon="pi pi-briefcase"
+          [rounded]="true"
+          styleClass="w-full"
+          routerLink="/agent"
+          (onClick)="closeMenu()"
+        />
+      }
+      <a routerLink="/profile" class="user-greeting" (click)="closeMenu()">{{
+        currentUser()?.firstName
+      }}</a>
+      <p-button
+        label="Déconnexion"
+        severity="contrast"
+        [outlined]="true"
+        [rounded]="true"
+        styleClass="w-full"
+        (onClick)="logout()"
+      />
+    }
+    <div class="drawer-meta">
+      12 agences en Provence<br />
+      04 42 00 00 00
+    </div>
+  </div>
+</aside>
