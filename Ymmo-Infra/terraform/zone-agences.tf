@@ -15,6 +15,7 @@ module "agence_01" {
   cpu_cores    = 1
   storage_id   = local.sites.agence_01.storage_id
   tags         = ["ymmotom", "agence", "agence01"]
+  pool_id      = "ymmo-pool"
 
   # Interface WAN (vmbr0) : permet d'atteindre l'IP WAN d'OPNsense pour initier le tunnel WireGuard.
   network_interfaces = [
@@ -41,6 +42,7 @@ module "agence_02" {
   cpu_cores    = 1
   storage_id   = local.sites.agence_02.storage_id
   tags         = ["ymmotom", "agence", "agence02"]
+  pool_id      = "ymmo-pool"
 
   # Interface WAN (vmbr0) : même logique qu'Agence-01.
   network_interfaces = [

@@ -30,6 +30,7 @@ module "client01_siege" {
   disk_size    = 64 # Doit correspondre au disque du template Windows (64G)
   storage_id   = local.sites.siege.storage_id
   tags         = ["ymmotom", "client", "windows"]
+  pool_id      = "ymmo-pool"
 
   # Spécificités du template Windows : firmware UEFI (OVMF) + machine q35,
   # disque sur sata0 (iothread non supporté en sata). Les disques EFI et TPM

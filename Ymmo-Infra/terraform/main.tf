@@ -47,3 +47,9 @@ locals {
     # On pourra étendre ici jusqu'à l'agence 12 facilement
   }
 }
+
+# Pool de ressources Proxmox « ymmo-pool » : prérequis partagé créé de façon
+# idempotente par ymmo.sh (ensure_pool, API Proxmox) AVANT Packer et Terraform.
+# Volontairement NON géré ici en resource : Packer (qui tourne avant TF) ne peut
+# pas le créer, et un `tf destroy` tenterait de supprimer un pool non vide (templates
+# Packer encore présents). Les VMs le référencent donc par son nom littéral (pool_id).

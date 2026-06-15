@@ -37,6 +37,7 @@ resource "proxmox_virtual_environment_vm" "this" {
   vm_id       = var.vm_id
   description = var.description
   tags        = var.tags
+  pool_id     = var.pool_id
 
   # Firmware et type de machine : null = la valeur du template cloné est
   # conservée. Les clones Windows UEFI doivent passer bios="ovmf"/machine="q35"
@@ -104,6 +105,11 @@ resource "proxmox_virtual_environment_vm" "this" {
   lifecycle {
     ignore_changes = [
       initialization[0].user_data_file_id,
+      # Le provider bpg ne relit pas l'appartenance au pool : sans cet ignore,
+      # chaque apply suivant la création retente l'ajout au pool et échoue avec
+      # « VM ... is already a pool member » (HTTP 500). Le rattachement se fait
+      # à la création ; on ignore ensuite ce faux diff (la VM reste dans le pool).
+      pool_id,
     ]
   }
 }

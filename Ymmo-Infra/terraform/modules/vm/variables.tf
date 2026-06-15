@@ -59,6 +59,12 @@ variable "storage_id" {
   default     = "local-lvm"
 }
 
+variable "pool_id" {
+  description = "Pool de ressources Proxmox auquel rattacher la VM (null = aucun)"
+  type        = string
+  default     = null
+}
+
 variable "network_interfaces" {
   description = "Liste des interfaces réseau"
   type = list(object({
