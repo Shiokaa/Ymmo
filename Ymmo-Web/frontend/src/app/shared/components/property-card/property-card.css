@@ -1,0 +1,9 @@
+/* Les styles .card* sont globaux (src/styles.css) : ils font partie du design system. */
+
+:host {
+  display: block;
+}
+
+:host .card {
+  height: 100%;
+}

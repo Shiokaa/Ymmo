@@ -1,0 +1,40 @@
+<a class="card" [attr.data-hue]="hue()" [routerLink]="['/properties', property().id]">
+  <div class="card-image">
+    @if (coverImageUrl(); as imageUrl) {
+      <img [src]="imageUrl" [alt]="property().title" loading="lazy" />
+    } @else {
+      <div class="ph" aria-hidden="true">
+        <i class="pi pi-image"></i>
+      </div>
+    }
+    <span class="card-badge">
+      <p-tag [value]="typeLabel()" />
+    </span>
+    <button
+      type="button"
+      class="card-fav"
+      [class.active]="isFavorite()"
+      aria-label="Ajouter aux favoris"
+      (click)="toggleFavorite($event)"
+    >
+      <i class="pi" [class.pi-heart]="!isFavorite()" [class.pi-heart-fill]="isFavorite()"></i>
+    </button>
+  </div>
+
+  <div class="card-body">
+    <div class="card-row">
+      <h3 class="card-title">{{ property().title }}</h3>
+      <div class="card-price">{{ formattedPrice() }}</div>
+    </div>
+    <p class="card-city">
+      <i class="pi pi-map-marker"></i>
+      {{ property().city }} · {{ property().postalCode }}
+    </p>
+    <div class="card-meta">
+      <span><i class="pi pi-arrows-h"></i> {{ property().size }} m²</span>
+      @if (property().roomsCount > 0) {
+        <span><i class="pi pi-th-large"></i> {{ property().roomsCount }} pièces</span>
+      }
+    </div>
+  </div>
+</a>
