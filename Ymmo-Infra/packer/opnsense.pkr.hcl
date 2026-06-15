@@ -14,6 +14,8 @@ source "proxmox-iso" "opnsense" {
   vm_name              = var.opnsense_template_name
   template_description = "OPNsense Hardened Template (Généré le : ${formatdate("YYYY-MM-DD", timestamp())})"
   vm_id                = var.opnsense_vm_id
+  # Pool de ressources Proxmox regroupant les templates et VMs Ymmo (doit exister avant le build).
+  pool = "ymmo-pool"
 
   # ISO
   boot_iso {
@@ -64,7 +66,7 @@ source "proxmox-iso" "opnsense" {
     "<wait2s><spacebar><wait2s><enter>", # COCHER le disque (Espace) puis VALIDER (Entrée)
     "<wait2s><left><wait2s><enter>",     # Sélectionner YES (Gauche) et VALIDER (Entrée)
 
-    "<wait230s>", # Attente de l'installation des fichiers
+    "<wait250s>", # Attente de l'installation des fichiers
 
     # Étape critique : Définition du mot de passe ROOT avant reboot
     "<enter>",                                     # Sélection de "Password" dans le menu post-install

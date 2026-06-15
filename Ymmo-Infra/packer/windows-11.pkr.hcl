@@ -16,8 +16,10 @@ source "proxmox-iso" "windows-11" {
   insecure_skip_tls_verify = var.proxmox_skip_tls_verify
 
   # Métadonnées du template
-  vm_name              = var.windows_template_name
-  vm_id                = var.windows_vm_id
+  vm_name = var.windows_template_name
+  vm_id   = var.windows_vm_id
+  # Pool de ressources Proxmox regroupant les templates et VMs Ymmo (doit exister avant le build).
+  pool                 = "ymmo-pool"
   template_description = "Template Windows 11 25H2 (Sysprep + pilotes VirtIO) — Généré le : ${formatdate("YYYY-MM-DD", timestamp())}"
 
   # ISO principal Windows 11 — démonté après installation

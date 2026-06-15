@@ -14,6 +14,8 @@ source "proxmox-iso" "debian-12" {
   vm_name              = var.template_name
   template_description = "${var.template_description} (Généré le : ${formatdate("YYYY-MM-DD", timestamp())})"
   vm_id                = var.vm_id
+  # Pool de ressources Proxmox regroupant les templates et VMs Ymmo (doit exister avant le build).
+  pool = "ymmo-pool"
 
   # Fichier ISO
   boot_iso {

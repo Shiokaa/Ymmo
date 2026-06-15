@@ -221,6 +221,28 @@ foreach ($vlan_nat as [$subnet, $name]) {
     ];
 }
 
+// 9. Port-forward (DNAT) : exposer la webapp Ymmo sur le WAN (acces depuis le PC fixe).
+//    L API REST OPNsense n expose pas les port-forwards (code legacy, comme le NAT
+//    outbound), on bake donc directement dans config.xml.
+//    Source 192.168.10.0/24 (reseau lab) -> WAN:8080  ==DNAT==>  10.0.10.2:80 (frontend nginx).
+//    "associated-rule-id" => "pass" : OPNsense genere automatiquement la regle de
+//    filtrage WAN correspondante (sinon le trafic traduit serait bloque par defaut).
+if (!isset($config["nat"]["rule"]) || !is_array($config["nat"]["rule"])) {
+    $config["nat"]["rule"] = [];
+}
+$config["nat"]["rule"][] = [
+    "interface"          => "wan",
+    "ipprotocol"         => "inet",
+    "protocol"           => "tcp",
+    "source"             => ["network" => "192.168.10.0/24"],
+    "destination"        => ["network" => "wanip", "port" => "8080"],
+    "target"             => "10.0.10.2",
+    "local-port"         => "80",
+    "descr"              => "Webapp-PortForward-WAN",
+    "associated-rule-id" => "pass",
+    "created"            => ["time" => (string)time(), "username" => "root@local"],
+];
+
 // 7. Pre-declaration des VLANs et interfaces OPT du Siege
 //    L API OPNsense n expose pas l assignation d interfaces (issue core#7324,
 //    fermee "not planned"). On ecrit directement dans config.xml.
@@ -266,7 +288,7 @@ foreach ($siege_vlans as $v) {
     ];
 }
 
-write_config("Packer: cles SSH root, SSH daemon, interfaces, wizard, cles API, regle WAN, pass rules VLANs, floating WireGuard, NAT outbound hybrid, VLANs Siege");
+write_config("Packer: cles SSH root, SSH daemon, interfaces, wizard, cles API, regle WAN, pass rules VLANs, floating WireGuard, NAT outbound hybrid, port-forward Webapp, VLANs Siege");
 echo "config.xml sauvegarde avec succes.\n";
 '
 
