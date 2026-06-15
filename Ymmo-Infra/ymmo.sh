@@ -52,6 +52,7 @@ usage() {
     echo "  ansible wireguard  [options]       Déployer WireGuard complet (OPNsense + agences)"
     echo "  ansible bastion    [options]       Reconfigurer le bastion uniquement"
     echo "  ansible samba4     [options]       Configurer Samba4 AD DC"
+    echo "  ansible webapp     [options]       Déployer le site web Ymmo (Docker Compose)"
     echo "  ansible windows    [options]       Configurer les clients Windows (DNS + jonction AD)"
     echo "  ansible deploy     [options]       Enchaîner tous les playbooks (setup→windows)"
     echo ""
@@ -174,6 +175,7 @@ cmd_ansible() {
         network)    run_ansible opnsense_network.yml  "$@" ;;
         wireguard)  run_ansible wireguard.yml         "$@" ;;
         samba4)     run_ansible samba4.yml            "$@" ;;
+        webapp)     run_ansible webapp.yml            "$@" ;;
         windows)    run_ansible windows_client.yml    "$@" ;;
 
         # --limit Bastion est injecté en premier ; l'utilisateur peut le surcharger
@@ -191,6 +193,7 @@ cmd_ansible() {
                 opnsense_network.yml \
                 wireguard.yml \
                 samba4.yml \
+                webapp.yml \
                 windows_client.yml \
                 "$@"
             ;;
@@ -400,7 +403,8 @@ cmd_full_deploy() {
         opnsense_setup.yml \
         opnsense_network.yml \
         wireguard.yml \
-        samba4.yml
+        samba4.yml \
+        webapp.yml
 
     log "═══ Phase 3/4 — Terraform : client Windows (DHCP désormais actif) ═══"
     (cd "$TF_DIR" && "${tf_apply[@]}")
