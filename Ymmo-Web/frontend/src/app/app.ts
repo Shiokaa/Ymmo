@@ -1,18 +1,19 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
 
+import { AuthService } from './core/services/auth.service';
+
+/**
+ * Coquille de l'application : délègue tout le rendu au routeur.
+ */
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, ButtonModule],
+  imports: [RouterOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly title = signal('frontend');
-  protected readonly message = signal('Cliquez sur le bouton pour tester !');
-
-  onTestClick() {
-    this.message.set('Le bouton PrimeNG fonctionne parfaitement ! 🚀');
+  constructor() {
+    inject(AuthService).loadCurrentUser();
   }
 }
