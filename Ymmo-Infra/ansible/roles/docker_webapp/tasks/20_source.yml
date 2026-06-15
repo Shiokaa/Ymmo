@@ -1,0 +1,52 @@
+---
+# Copie locale du code applicatif Ymmo-Web (pas de git clone).
+# Méthode : archive sur le control node → copie du tar.gz → décompression sur la VM.
+# Choisie plutôt que synchronize/rsync pour rester compatible avec le ProxyJump bastion
+# (transfert SFTP simple).
+
+# run_once : un seul agent archive le dossier source, même si plusieurs VMs sont ciblées.
+- name: "Source | Archiver le dossier source sur le control node"
+  ansible.builtin.archive:
+    path: "{{ webapp_source_dir }}/"
+    dest: /tmp/ymmo-web.tar.gz
+    format: gz
+    exclusion_patterns: "{{ webapp_source_excludes }}"
+    force_archive: true
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: "Source | Copier l'archive vers la VM"
+  ansible.builtin.copy:
+    src: /tmp/ymmo-web.tar.gz
+    dest: /tmp/ymmo-web.tar.gz
+    mode: '0644'
+
+- name: "Source | Créer le répertoire de destination"
+  ansible.builtin.file:
+    path: "{{ webapp_dest_dir }}"
+    state: directory
+    mode: '0755'
+    owner: sysadmin
+    group: sysadmin
+
+- name: "Source | Décompresser l'archive dans le répertoire de destination"
+  ansible.builtin.unarchive:
+    src: /tmp/ymmo-web.tar.gz
+    dest: "{{ webapp_dest_dir }}"
+    remote_src: true
+    owner: sysadmin
+    group: sysadmin
+
+- name: "Source | Supprimer l'archive temporaire sur la VM"
+  ansible.builtin.file:
+    path: /tmp/ymmo-web.tar.gz
+    state: absent
+
+- name: "Source | Supprimer l'archive temporaire sur le control node"
+  ansible.builtin.file:
+    path: /tmp/ymmo-web.tar.gz
+    state: absent
+  delegate_to: localhost
+  become: false
+  run_once: true

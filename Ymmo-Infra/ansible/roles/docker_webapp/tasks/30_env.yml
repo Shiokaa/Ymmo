@@ -1,0 +1,11 @@
+---
+# Génération du .env de la stack sur la VM (jamais copié depuis le control node).
+
+- name: "Env | Générer {{ webapp_dest_dir }}/.env"
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ webapp_dest_dir }}/.env"
+    mode: '0600'
+    owner: sysadmin
+    group: sysadmin
+  no_log: true

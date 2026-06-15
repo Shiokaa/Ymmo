@@ -1,0 +1,21 @@
+---
+# Variables de groupe pour la VM Webapp (tag : webapp).
+# Les valeurs sensibles (mot de passe DB, secret JWT) sont chargées depuis le vault Ansible.
+# Ajouter dans group_vars/all/vault.yml :
+#   vault_webapp_db_password: "<mot de passe fort>"
+#   vault_webapp_jwt_secret: "<secret fort>"
+
+# Utilisateur SSH pour la connexion initiale — root est désactivé par le script de durcissement.
+ansible_user: sysadmin
+
+# Pipelining géré globalement dans ansible.cfg (désactivé).
+# Timeout élevé : la chaîne ProxyJump ajoute ~3s par connexion SSH.
+ansible_become_timeout: 30
+
+# Mot de passe de la base de données et secret JWT — chargés depuis le vault.
+webapp_db_password: "{{ vault_webapp_db_password }}"
+webapp_jwt_secret: "{{ vault_webapp_jwt_secret }}"
+
+# Jump host WireGuard : SSH tunnelisé via le Bastion (10.254.0.2) pour atteindre le VLAN 10.
+# UserKnownHostsFile=/dev/null : évite le blocage sur mismatch de clé après un rebuild Terraform.
+ansible_ssh_common_args: "-o ProxyJump=sysadmin@{{ hostvars[groups['tag_bastion'][0]]['ansible_host'] }} -o ForwardAgent=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null"

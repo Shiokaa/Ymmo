@@ -1,0 +1,4 @@
+---
+# Aucun handler : le déploiement de la stack (40_deploy.yml) lance
+# « docker compose up -d --build » de façon idempotente à chaque exécution.
+# Inutile de le redéclencher via un handler (le build serait fait deux fois).

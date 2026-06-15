@@ -1,0 +1,28 @@
+---
+# Orchestration du rôle docker_webapp.
+# Déploie la stack applicative Ymmo (Docker Compose) sur la VM Webapp.
+# Séquence : assert → docker → source → env → deploy → smoke
+
+- name: Vérifier les prérequis
+  ansible.builtin.import_tasks: 00_assert.yml
+  tags: [always]
+
+- name: Installer Docker CE et le plugin docker compose
+  ansible.builtin.import_tasks: 10_docker.yml
+  tags: [docker]
+
+- name: Copier les sources de l'application depuis le control node
+  ansible.builtin.import_tasks: 20_source.yml
+  tags: [source]
+
+- name: Générer le fichier .env de la stack
+  ansible.builtin.import_tasks: 30_env.yml
+  tags: [env]
+
+- name: Démarrer la stack Docker Compose
+  ansible.builtin.import_tasks: 40_deploy.yml
+  tags: [deploy]
+
+- name: Vérifier le bon fonctionnement de la stack
+  ansible.builtin.import_tasks: 99_smoke.yml
+  tags: [smoke]

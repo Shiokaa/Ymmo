@@ -1,0 +1,18 @@
+---
+# Démarrage de la stack Docker Compose.
+# community.docker n'est pas dans collections/requirements.yml : on utilise
+# le binaire "docker compose" (plugin CLI) via ansible.builtin.command.
+
+- name: "Deploy | Lancer docker compose up -d --build"
+  ansible.builtin.command:
+    cmd: docker compose up -d --build
+    chdir: "{{ webapp_dest_dir }}"
+  register: webapp_compose_up
+  # "docker compose up" est idempotent côté Docker, mais pas côté Ansible : on ne
+  # marque "changed" que si Docker a effectivement (re)créé/démarré un conteneur.
+  changed_when: >-
+    'Creating' in webapp_compose_up.stderr
+    or 'Created' in webapp_compose_up.stderr
+    or 'Starting' in webapp_compose_up.stderr
+    or 'Started' in webapp_compose_up.stderr
+    or 'Recreating' in webapp_compose_up.stderr

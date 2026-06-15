@@ -40,3 +40,20 @@
   loop_control:
     label: "{{ item.name }}"
   no_log: true
+
+# Recharge le service WireGuard pour que les peers fraîchement enregistrés soient
+# pris en compte par l'interface wg0 EN COURS D'EXÉCUTION. Sans ce reconfigure,
+# OPNsense conserve les peers en configuration mais ne les charge pas dans le tunnel
+# actif : le handshake bastion↔OPNsense n'a pas lieu et les VMs internes (DC, Webapp)
+# restent injoignables via le ProxyJump — d'où le « Connection closed by UNKNOWN
+# port 65535 » au démarrage de samba4/webapp dans full-deploy.
+- name: "WireGuard | Recharger le service WireGuard (appliquer les peers)"
+  ansible.builtin.uri:
+    url: "https://{{ opnsense_api_host }}/api/wireguard/service/reconfigure"
+    method: POST
+    url_username: "{{ opnsense_api_key }}"
+    url_password: "{{ opnsense_api_secret }}"
+    validate_certs: "{{ opnsense_ssl_verify }}"
+    force_basic_auth: true
+    status_code: 200
+  changed_when: false

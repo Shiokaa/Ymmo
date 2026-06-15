@@ -1,0 +1,31 @@
+---
+# Tests de fumée post-déploiement de la stack Ymmo.
+
+- name: "Smoke | Lister l'état des conteneurs"
+  ansible.builtin.command:
+    cmd: docker compose ps --format json
+    chdir: "{{ webapp_dest_dir }}"
+  register: webapp_compose_ps
+  changed_when: false
+
+- name: "Smoke | Vérifier que tous les conteneurs sont 'running'"
+  ansible.builtin.assert:
+    that:
+      - >-
+        webapp_compose_ps.stdout_lines
+        | map('from_json')
+        | map(attribute='State')
+        | unique == ['running']
+    fail_msg: >-
+      Tous les conteneurs de la stack Ymmo ne sont pas 'running'.
+      Sortie de "docker compose ps" : {{ webapp_compose_ps.stdout }}
+    success_msg: "Tous les conteneurs de la stack Ymmo sont 'running'"
+
+- name: "Smoke | Vérifier que le frontend répond en HTTP 200"
+  ansible.builtin.uri:
+    url: http://localhost:80
+    status_code: 200
+  register: webapp_frontend_check
+  retries: 5
+  delay: 5
+  until: webapp_frontend_check.status == 200

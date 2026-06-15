@@ -1,0 +1,15 @@
+---
+galaxy_info:
+  author: Ymmo-Infra
+  description: "Déploiement de la stack applicative Ymmo (Docker Compose) sur Debian 12"
+  min_ansible_version: "2.15"
+  platforms:
+    - name: Debian
+      versions:
+        - bookworm
+  galaxy_tags:
+    - docker
+    - docker_compose
+    - webapp
+    - debian
+dependencies: []

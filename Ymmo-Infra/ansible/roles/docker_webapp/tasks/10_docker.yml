@@ -1,0 +1,62 @@
+---
+# Installation de Docker CE et du plugin "docker compose" depuis le dépôt officiel Docker.
+# Référence : https://docs.docker.com/engine/install/debian/
+
+- name: "Docker | Installer les dépendances pour la gestion des dépôts apt HTTPS"
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: "Docker | Créer le répertoire pour les clés apt"
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+
+# 'creates' garantit l'idempotence : la clé n'est téléchargée qu'une seule fois.
+- name: "Docker | Télécharger la clé GPG officielle du dépôt Docker"
+  ansible.builtin.get_url:
+    url: https://download.docker.com/linux/debian/gpg
+    dest: /etc/apt/keyrings/docker.asc
+    mode: '0644'
+    owner: root
+    group: root
+
+- name: "Docker | Ajouter le dépôt apt Docker (bookworm)"
+  ansible.builtin.apt_repository:
+    repo: >-
+      deb [arch={{ ansible_facts['architecture'] | replace('x86_64', 'amd64')
+      | replace('aarch64', 'arm64') }} signed-by=/etc/apt/keyrings/docker.asc]
+      https://download.docker.com/linux/debian {{ ansible_facts['distribution_release'] }} stable
+    filename: docker
+    state: present
+    update_cache: true
+
+- name: "Docker | Installer Docker CE et le plugin docker compose"
+  ansible.builtin.apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: "Docker | Activer et démarrer le service Docker"
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+
+# Permet à sysadmin de lancer "docker compose" sans sudo (effectif à la prochaine connexion SSH).
+- name: "Docker | Ajouter sysadmin au groupe docker"
+  ansible.builtin.user:
+    name: sysadmin
+    groups: docker
+    append: true

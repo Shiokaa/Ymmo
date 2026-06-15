@@ -1,0 +1,22 @@
+---
+# Playbook : déploiement de l'application web Ymmo (Docker Compose).
+# Cible la VM "Webapp" taguée dans l'inventaire dynamique Proxmox.
+#
+# Prérequis :
+#   - La VM Webapp doit être démarrée (provisionnée par Terraform, zone-infra.tf)
+#   - vault_webapp_db_password et vault_webapp_jwt_secret doivent être définis
+#     dans group_vars/all/vault.yml
+#   - Le vault doit être déchiffré : ansible-playbook ... --ask-vault-pass
+#
+# Exécution :
+#   ansible-playbook ansible/playbooks/webapp.yml --ask-vault-pass
+
+- name: "Déploiement de l'application web Ymmo (Docker Compose)"
+  hosts: tag_webapp
+  # gather_facts: true — ansible_architecture et ansible_distribution_release
+  # sont utilisés pour configurer le dépôt apt Docker (10_docker.yml).
+  gather_facts: true
+  become: true
+
+  roles:
+    - docker_webapp

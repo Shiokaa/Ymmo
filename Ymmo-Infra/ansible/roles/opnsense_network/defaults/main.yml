@@ -59,3 +59,18 @@ opnsense_network_dns_servers:
 # Duree de bail DHCP en secondes (43200 = 12h).
 # Le module dnsmasq_range attend un entier, pas une chaine "12h".
 opnsense_network_dhcp_lease: 43200
+
+# IP et port de la VM "Webapp" (VLAN 10 SRV_SIEGE) qui heberge le site Ymmo.
+opnsense_webapp_ip: "10.0.10.2"
+opnsense_webapp_port: "80"
+
+# Reseaux sources autorises a joindre la webapp en TCP {{ opnsense_webapp_port }}.
+# - 10.0.20.0/24 (USR_SIEGE) : necessite une regle explicite, car les VLANs du
+#   Siege ne communiquent pas entre eux par defaut.
+# - 10.1.20.0/24 / 10.2.20.0/24 (agences, via WireGuard) : deja autorises par la
+#   regle floating "Allow-WireGuard-backbone-to-VLANs-siege" bakee au build Packer
+#   (10.254.0.0/24 -> 10.0.0.0/16). Listes ici pour documenter le perimetre cible.
+opnsense_webapp_allowed_sources:
+  - "10.0.20.0/24"
+  - "10.1.20.0/24"
+  - "10.2.20.0/24"

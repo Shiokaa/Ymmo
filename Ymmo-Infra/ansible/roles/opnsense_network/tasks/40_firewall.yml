@@ -19,3 +19,25 @@
   loop: "{{ opnsense_network_vlans }}"
   loop_control:
     label: "{{ item.name }}"
+
+# Acces a la webapp (10.0.10.2:80, VLAN SRV_SIEGE) depuis les postes utilisateurs
+# du Siege (USR_SIEGE, opt2). Les VLANs ne communiquent pas entre eux par defaut,
+# d ou cette regle explicite.
+# Les sources agences (10.1.20.0/24, 10.2.20.0/24) arrivent via le backbone
+# WireGuard (10.254.0.0/24) et sont deja autorisees vers 10.0.0.0/16 par la regle
+# floating bakee au build Packer (opnsense-setup.sh, section "Allow-WireGuard-
+# backbone-to-VLANs-siege") : aucune regle supplementaire requise ici pour elles.
+- name: "Firewall | Autoriser USR_SIEGE vers la webapp (TCP {{ opnsense_webapp_port }})"
+  oxlorg.opnsense.rule:
+    description: "Allow-USR_SIEGE-to-Webapp-TCP{{ opnsense_webapp_port }}"
+    match_fields: ['description']
+    action: pass
+    interface: ["opt2"]
+    direction: in
+    ip_protocol: inet
+    protocol: tcp
+    source_net: "10.0.20.0/24"
+    destination_net: "{{ opnsense_webapp_ip }}/32"
+    destination_port: "{{ opnsense_webapp_port }}"
+    enabled: true
+    state: present

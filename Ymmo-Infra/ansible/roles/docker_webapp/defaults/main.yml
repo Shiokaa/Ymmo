@@ -1,0 +1,25 @@
+---
+# Répertoire source de l'application Ymmo-Web sur le control node.
+# Par défaut : dossier "Ymmo-Web" au même niveau que le dépôt Ymmo-Infra
+# ( {{ playbook_dir }} = ansible/playbooks, donc 3 niveaux au-dessus = parent du dépôt ).
+webapp_source_dir: "{{ playbook_dir }}/../../../Ymmo-Web"
+
+# Répertoire de destination sur la VM Webapp, contiendra le docker-compose.yml et le .env généré.
+webapp_dest_dir: /opt/ymmo-web
+
+# Motifs exclus de l'archive copiée (build artefacts, dépendances, secrets locaux...).
+# Appliqués récursivement sous webapp_source_dir (ansible.builtin.archive: exclusion_patterns).
+webapp_source_excludes:
+  - "*/node_modules*"
+  - "*/target*"
+  - "*/.angular/cache*"
+  - "*/dist*"
+  - ".git*"
+  - "uploads*"
+  - ".env"
+  - "*/.vscode*"
+
+# Valeurs non sensibles du .env (cf. ../Ymmo-Web/docker-compose.yml).
+webapp_db_user: ymmo
+webapp_db_name: ymmo
+webapp_db_port: 5432

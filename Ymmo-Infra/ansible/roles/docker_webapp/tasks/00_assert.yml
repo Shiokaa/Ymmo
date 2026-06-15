@@ -1,0 +1,58 @@
+---
+# Validation des prérequis avant le déploiement de la stack Ymmo.
+
+# Attend que la VM Webapp soit réellement joignable en SSH avant toute tâche.
+# Sur un déploiement « from scratch », la 1re tâche peut taper alors que la VM
+# finit son boot/cloud-init ou que le tunnel WireGuard bastion→OPNsense n'a pas
+# encore fait son handshake (lazy : déclenché par le 1er paquet, qui peut être
+# perdu le temps de la négociation). Cas surtout présent dans full-deploy, où
+# wireguard.yml reconfigure le service WireGuard d'OPNsense juste avant ce play.
+# Les retries absorbent cette course et évitent le « Connection closed by UNKNOWN
+# port 65535 ». Fenêtre volontairement large (le reconfigure peut retarder le
+# handshake au-delà de 2 min).
+- name: "Assert | Attendre que la VM Webapp soit joignable en SSH (tunnel WireGuard + boot)"
+  ansible.builtin.wait_for_connection:
+    timeout: 240
+    sleep: 5
+
+- name: "Assert | Vérifier que webapp_db_password est défini"
+  ansible.builtin.assert:
+    that:
+      - webapp_db_password is defined
+      - webapp_db_password | length > 0
+    fail_msg: >-
+      webapp_db_password doit être défini (group_vars/tag_webapp/main.yml mappe
+      cette variable vers vault_webapp_db_password, à ajouter dans group_vars/all/vault.yml).
+    success_msg: "Mot de passe de la base de données défini"
+  no_log: true
+
+- name: "Assert | Vérifier que webapp_jwt_secret est défini"
+  ansible.builtin.assert:
+    that:
+      - webapp_jwt_secret is defined
+      - webapp_jwt_secret | length > 0
+    fail_msg: >-
+      webapp_jwt_secret doit être défini (group_vars/tag_webapp/main.yml mappe
+      cette variable vers vault_webapp_jwt_secret, à ajouter dans group_vars/all/vault.yml).
+    success_msg: "Secret JWT défini"
+  no_log: true
+
+# Le code applicatif est livré par copie locale (pas de git clone) : le dossier
+# source doit exister côté control node avant de lancer l'archivage (20_source).
+- name: "Assert | Vérifier la présence du dossier source côté control node"
+  ansible.builtin.stat:
+    path: "{{ webapp_source_dir }}"
+  register: webapp_source_stat
+  delegate_to: localhost
+  become: false
+  run_once: true
+
+- name: "Assert | Échouer si le dossier source est introuvable"
+  ansible.builtin.assert:
+    that:
+      - webapp_source_stat.stat.exists
+      - webapp_source_stat.stat.isdir
+    fail_msg: >-
+      Le dossier source {{ webapp_source_dir }} est introuvable sur le control node.
+      Vérifier webapp_source_dir (par défaut : ../Ymmo-Web au même niveau que Ymmo-Infra).
+    success_msg: "Dossier source trouvé : {{ webapp_source_dir }}"
