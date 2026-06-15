@@ -1,0 +1,55 @@
+<app-header />
+
+<main>
+  <section class="requests-section">
+    <div class="container">
+      <h2 class="section-title">Mes demandes</h2>
+
+      <div class="request-list">
+        @switch (requestsState().status) {
+          @case ('loading') {
+            <p class="request-empty">Chargement de vos demandes…</p>
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger vos demandes pour le moment. Vérifiez votre connexion et
+              réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (requests().length === 0) {
+              <div class="grid-empty">
+                Vous n'avez pas encore de demande.
+                <br />
+                <a class="link-arrow" routerLink="/search">Parcourir les biens</a>
+              </div>
+            } @else {
+              @for (request of requests(); track request.id) {
+                <article class="request-card">
+                  <div class="request-card-head">
+                    <a
+                      class="request-card-title"
+                      [routerLink]="['/properties', request.propertyId]"
+                    >
+                      {{ request.propertyTitle }}
+                    </a>
+                    <p-tag
+                      [value]="statusLabel(request.status)"
+                      [severity]="statusSeverity(request.status)"
+                    />
+                  </div>
+                  <p class="request-card-meta">
+                    {{ typeLabel(request.type) }} · {{ request.createdAt.slice(0, 10) }}
+                  </p>
+                  <p class="request-card-message">{{ request.message }}</p>
+                </article>
+              }
+            }
+          }
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

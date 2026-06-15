@@ -1,0 +1,115 @@
+<app-header />
+
+<main>
+  <section>
+    <div class="container">
+      @switch (agencyState().status) {
+        @case ('loading') {
+          <div class="agency-detail-head">
+            <p-skeleton shape="circle" size="64px" />
+            <div class="agency-detail-head-text">
+              <p-skeleton width="40%" height="24px" />
+              <p-skeleton width="60%" height="16px" styleClass="mt-2" />
+            </div>
+          </div>
+          <p-skeleton width="100%" height="16px" styleClass="mt-4" />
+          <p-skeleton width="90%" height="16px" styleClass="mt-2" />
+        }
+        @case ('error') {
+          <div class="grid">
+            <div class="grid-empty">
+              Agence introuvable.
+              <br />
+              <a class="link-arrow" routerLink="/agencies">Retour aux agences</a>
+            </div>
+          </div>
+        }
+        @case ('ready') {
+          @if (agency(); as agency) {
+            <a class="link-arrow agency-detail-back" routerLink="/agencies">
+              <i class="pi pi-arrow-left"></i> Retour aux agences
+            </a>
+
+            <div class="agency-detail-head">
+              <div class="agency-mono" aria-hidden="true">{{ initials(agency.name) }}</div>
+              <div class="agency-detail-head-text">
+                <h1 class="section-title">{{ agency.name }}</h1>
+                <p-tag
+                  [value]="statusLabel(agency.status)"
+                  [severity]="statusSeverity(agency.status)"
+                />
+              </div>
+            </div>
+
+            <p class="agency-location">
+              <i class="pi pi-map-marker"></i>
+              {{ agency.city }} {{ agency.postalCode }} · {{ agency.address }}
+            </p>
+
+            <div class="agency-contacts">
+              <a class="agency-contact" [href]="'tel:' + agency.phone">
+                <i class="pi pi-phone"></i>
+                {{ agency.phone }}
+              </a>
+              <a class="agency-contact" [href]="'mailto:' + agency.email">
+                <i class="pi pi-envelope"></i>
+                {{ agency.email }}
+              </a>
+            </div>
+
+            <p class="agency-detail-description">{{ agency.description }}</p>
+          }
+        }
+      }
+    </div>
+  </section>
+
+  @if (agencyState().status === 'ready') {
+    <section>
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="section-eyebrow">Biens disponibles</div>
+            <h2 class="section-title">Biens de l'agence</h2>
+          </div>
+        </div>
+
+        <div class="grid">
+          @switch (propertiesState().status) {
+            @case ('loading') {
+              @for (item of skeletonItems; track item) {
+                <article class="card" aria-hidden="true">
+                  <div class="card-image">
+                    <p-skeleton width="100%" height="100%" borderRadius="0" />
+                  </div>
+                  <div class="card-body">
+                    <p-skeleton width="75%" height="18px" />
+                    <p-skeleton width="50%" height="14px" />
+                    <p-skeleton width="90%" height="14px" styleClass="mt-2" />
+                  </div>
+                </article>
+              }
+            }
+            @case ('error') {
+              <div class="grid-empty">
+                Impossible de charger les biens pour le moment. Vérifiez votre connexion et
+                réessayez.
+              </div>
+            }
+            @case ('ready') {
+              @if (agencyProperties().length === 0) {
+                <div class="grid-empty">Aucun bien disponible pour cette agence.</div>
+              } @else {
+                @for (property of agencyProperties(); track property.id) {
+                  <app-property-card [property]="property" [index]="$index" />
+                }
+              }
+            }
+          }
+        </div>
+      </div>
+    </section>
+  }
+</main>
+
+<app-footer />

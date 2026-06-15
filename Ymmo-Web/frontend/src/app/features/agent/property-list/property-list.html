@@ -1,0 +1,80 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <h1>Mes biens</h1>
+    <p-button label="Ajouter un bien" icon="pi pi-plus" routerLink="/agent/properties/new" />
+  </header>
+
+  @if (loadError()) {
+    <p class="agent-page-message">Impossible de charger vos biens. Merci de réessayer plus tard.</p>
+  } @else if (propertiesSignal() === null) {
+    <p-table [value]="[]" [loading]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Titre</th>
+          <th>Type</th>
+          <th>Ville</th>
+          <th>Prix</th>
+          <th>Disponibilité</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body"></ng-template>
+    </p-table>
+  } @else if (propertiesSignal()!.length === 0) {
+    <div class="agent-page-message">
+      <p>Aucun bien.</p>
+      <p-button label="Ajouter un bien" icon="pi pi-plus" routerLink="/agent/properties/new" />
+    </div>
+  } @else {
+    <p-table
+      [value]="propertiesSignal()!"
+      [paginator]="propertiesSignal()!.length > 10"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Titre</th>
+          <th>Type</th>
+          <th>Ville</th>
+          <th>Prix</th>
+          <th>Disponibilité</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-property>
+        <tr>
+          <td>{{ property.title }}</td>
+          <td>{{ typeLabel(property.type) }}</td>
+          <td>{{ property.city }}</td>
+          <td>{{ formatPrice(property.price) }}</td>
+          <td>
+            @if (property.available) {
+              <p-tag value="Disponible" severity="success" />
+            } @else {
+              <p-tag value="Vendu" severity="danger" />
+            }
+          </td>
+          <td class="agent-table-actions">
+            <p-button
+              icon="pi pi-pencil"
+              label="Éditer"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              [routerLink]="['/agent/properties', property.id, 'edit']"
+            />
+            <p-button
+              icon="pi pi-trash"
+              label="Supprimer"
+              severity="danger"
+              [outlined]="true"
+              size="small"
+              (onClick)="deleteProperty(property)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

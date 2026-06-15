@@ -1,0 +1,29 @@
+.agent-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agent-page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.agent-page-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px 0;
+  color: var(--ink-soft);
+}
+
+.agent-table-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}

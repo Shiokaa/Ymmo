@@ -1,0 +1,122 @@
+<app-header />
+
+<main>
+  <section class="search-section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">[ 01 ] Recherche</div>
+          <h2 class="section-title">Biens à vendre</h2>
+          <p class="section-subtitle">{{ results().length }} bien(s) trouvé(s)</p>
+        </div>
+      </div>
+
+      <!-- Barre de filtres -->
+      <form class="search search-filters" role="search" (submit)="$event.preventDefault()">
+        <!-- Ville -->
+        <div class="search-field">
+          <label for="search-city">Où</label>
+          <input
+            id="search-city"
+            type="text"
+            placeholder="Rechercher une ville"
+            autocomplete="off"
+            [ngModel]="searchCity()"
+            (ngModelChange)="onCityChange($event)"
+            name="city"
+          />
+        </div>
+
+        <!-- Type de bien -->
+        <div class="search-field">
+          <label for="search-type">Type de bien</label>
+          <p-select
+            inputId="search-type"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tous les biens"
+            [ngModel]="searchType()"
+            (ngModelChange)="onTypeChange($event)"
+            name="type"
+          />
+        </div>
+
+        <!-- Mot-clé -->
+        <div class="search-field">
+          <label for="search-query">Mot-clé</label>
+          <input
+            id="search-query"
+            type="text"
+            placeholder="Titre, description..."
+            autocomplete="off"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="onQueryChange($event)"
+            name="q"
+          />
+        </div>
+
+        <!-- Tri -->
+        <div class="search-field">
+          <label for="search-sort">Trier par</label>
+          <p-select
+            inputId="search-sort"
+            [options]="sortOptions"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="sortOrder()"
+            (ngModelChange)="onSortChange($event)"
+            name="sort"
+          />
+        </div>
+      </form>
+
+      <div class="grid">
+        @switch (propertiesState().status) {
+          @case ('loading') {
+            @for (item of skeletonItems; track item) {
+              <article class="card" aria-hidden="true">
+                <div class="card-image">
+                  <p-skeleton width="100%" height="100%" borderRadius="0" />
+                </div>
+                <div class="card-body">
+                  <p-skeleton width="75%" height="18px" />
+                  <p-skeleton width="50%" height="14px" />
+                  <p-skeleton width="90%" height="14px" styleClass="mt-2" />
+                </div>
+              </article>
+            }
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger les biens pour le moment. Vérifiez votre connexion et réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (results().length === 0) {
+              <div class="grid-empty">Aucun bien ne correspond à votre recherche.</div>
+            } @else {
+              @for (property of visibleResults(); track property.id) {
+                <app-property-card [property]="property" [index]="$index" />
+              }
+            }
+          }
+        }
+      </div>
+
+      @if (results().length > visibleCount()) {
+        <div class="load-more">
+          <p-button
+            label="Charger plus ({{ results().length - visibleCount() }} restants)"
+            [text]="true"
+            [outlined]="true"
+            [rounded]="true"
+            (onClick)="showMore()"
+          />
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<app-footer />

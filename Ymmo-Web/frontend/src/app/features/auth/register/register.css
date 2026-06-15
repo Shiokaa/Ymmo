@@ -1,0 +1,11 @@
+/* Page d'inscription : carte centrée sur fond teinté, cf. design system dans src/styles.css */
+
+/* Prénom / nom sur une même ligne */
+.field-row {
+  display: flex;
+  gap: 16px;
+}
+
+.field-row .field {
+  flex: 1;
+}

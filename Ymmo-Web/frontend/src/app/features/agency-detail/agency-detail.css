@@ -1,0 +1,83 @@
+/* ---- Lien retour ---- */
+.agency-detail-back {
+  display: inline-flex;
+  margin-bottom: 24px;
+}
+
+/* ---- En-tête de l'agence ---- */
+.agency-detail-head {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+
+.agency-detail-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.agency-mono {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: 0.02em;
+}
+
+.agency-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 24px;
+}
+
+.agency-location .pi {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+/* ---- Contacts ---- */
+.agency-contacts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.agency-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.agency-contact:hover {
+  color: var(--accent);
+}
+
+.agency-contact .pi {
+  color: var(--accent);
+}
+
+/* ---- Description ---- */
+.agency-detail-description {
+  font-size: 15px;
+  color: var(--ink-soft);
+  line-height: 1.6;
+  max-width: 720px;
+  margin: 0 0 16px;
+}

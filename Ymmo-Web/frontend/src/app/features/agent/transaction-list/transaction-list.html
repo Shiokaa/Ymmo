@@ -1,0 +1,69 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <h1>Transactions</h1>
+  </header>
+
+  @if (loadError()) {
+    <div class="agent-page-message">
+      <p>Impossible de charger les transactions. Merci de réessayer plus tard.</p>
+      <p-button label="Réessayer" icon="pi pi-refresh" (onClick)="load()" />
+    </div>
+  } @else if (transactions() === null) {
+    <p-table [value]="[]" [loading]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bien</th>
+          <th>Client</th>
+          <th>Agent</th>
+          <th>Montant</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body"></ng-template>
+    </p-table>
+  } @else if (transactions()!.length === 0) {
+    <div class="agent-page-message">
+      <p>Aucune transaction.</p>
+    </div>
+  } @else {
+    <p-table [value]="transactions()!">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bien</th>
+          <th>Client</th>
+          <th>Agent</th>
+          <th>Montant</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-transaction>
+        <tr>
+          <td>{{ transaction.propertyTitle }}</td>
+          <td>{{ transaction.clientFullName }}</td>
+          <td>{{ transaction.agentFullName ?? '—' }}</td>
+          <td>{{ formatAmount(transaction.amount) }}</td>
+          <td>
+            <p-tag
+              [value]="statusLabel(transaction.status)"
+              [severity]="statusSeverity(transaction.status)"
+            />
+          </td>
+          <td>{{ transaction.createdAt.slice(0, 10) }}</td>
+          <td>
+            <p-select
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="transaction.status"
+              (ngModelChange)="updateStatus(transaction, $event)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

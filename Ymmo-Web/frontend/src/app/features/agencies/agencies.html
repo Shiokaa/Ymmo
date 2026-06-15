@@ -1,0 +1,98 @@
+<app-header />
+
+<main>
+  <section>
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">Le réseau Ymmo</div>
+          <h2 class="section-title">Nos agences en Provence</h2>
+          @if (agenciesState().status === 'ready') {
+            <p class="section-subtitle">
+              {{ agencies().length }} {{ agencies().length === 1 ? 'agence' : 'agences' }} à votre
+              service.
+            </p>
+          }
+        </div>
+      </div>
+
+      <div class="grid">
+        @switch (agenciesState().status) {
+          @case ('loading') {
+            @for (item of skeletonItems; track item) {
+              <article class="agency-card" aria-hidden="true">
+                <div class="agency-head">
+                  <p-skeleton shape="circle" size="48px" />
+                  <div class="agency-head-text">
+                    <p-skeleton width="70%" height="18px" />
+                    <p-skeleton width="40%" height="14px" styleClass="mt-2" />
+                  </div>
+                </div>
+                <p-skeleton width="100%" height="14px" styleClass="mt-3" />
+                <p-skeleton width="90%" height="14px" styleClass="mt-2" />
+              </article>
+            }
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger les agences pour le moment. Vérifiez votre connexion et
+              réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (agencies().length === 0) {
+              <div class="grid-empty">Aucune agence à afficher pour le moment.</div>
+            } @else {
+              @for (agency of visibleAgencies(); track agency.id) {
+                <article class="agency-card">
+                  <div class="agency-head">
+                    <div class="agency-mono" aria-hidden="true">{{ initials(agency.name) }}</div>
+                    <div class="agency-head-text">
+                      <h3 class="agency-name">{{ agency.name }}</h3>
+                      <p-tag
+                        [value]="statusLabel(agency.status)"
+                        [severity]="statusSeverity(agency.status)"
+                      />
+                    </div>
+                  </div>
+
+                  <p class="agency-location">
+                    <i class="pi pi-map-marker"></i>
+                    {{ agency.city }} {{ agency.postalCode }} · {{ agency.address }}
+                  </p>
+
+                  <p class="agency-description">{{ agency.description }}</p>
+
+                  <div class="agency-contacts">
+                    <a class="agency-contact" [href]="'tel:' + agency.phone">
+                      <i class="pi pi-phone"></i>
+                      {{ agency.phone }}
+                    </a>
+                    <a class="agency-contact" [href]="'mailto:' + agency.email">
+                      <i class="pi pi-envelope"></i>
+                      {{ agency.email }}
+                    </a>
+                  </div>
+                </article>
+              }
+            }
+          }
+        }
+      </div>
+
+      @if (agenciesState().status === 'ready' && agencies().length > visibleCount()) {
+        <div class="load-more">
+          <p-button
+            label="Charger plus ({{ agencies().length - visibleCount() }} restantes)"
+            [text]="true"
+            [outlined]="true"
+            [rounded]="true"
+            (onClick)="showMore()"
+          />
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<app-footer />

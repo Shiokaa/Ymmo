@@ -1,0 +1,73 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <h1>Demandes</h1>
+  </header>
+
+  @if (loadError()) {
+    <p class="agent-page-message">
+      Impossible de charger les demandes. Merci de réessayer plus tard.
+    </p>
+  } @else if (requests() === null) {
+    <p-table [value]="[]" [loading]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bien</th>
+          <th>Demandeur</th>
+          <th>Type</th>
+          <th>Message</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body"></ng-template>
+    </p-table>
+  } @else if (requests()!.length === 0) {
+    <div class="agent-page-message">
+      <p>Aucune demande.</p>
+    </div>
+  } @else {
+    <p-table [value]="requests()!">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Bien</th>
+          <th>Demandeur</th>
+          <th>Type</th>
+          <th>Message</th>
+          <th>Statut</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-request>
+        <tr>
+          <td>{{ request.propertyTitle }}</td>
+          <td>{{ request.userFullName }}</td>
+          <td>{{ typeLabel(request.type) }}</td>
+          <td>{{ request.message }}</td>
+          <td>
+            <p-tag [value]="statusLabel(request.status)" [severity]="statusSeverity(request.status)" />
+          </td>
+          <td>{{ request.createdAt }}</td>
+          <td class="agent-table-actions">
+            <p-select
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="request.status"
+              (ngModelChange)="changeStatus(request, $event)"
+              [appendTo]="'body'"
+            />
+            <p-button
+              label="Créer la transaction"
+              severity="secondary"
+              [outlined]="true"
+              size="small"
+              (onClick)="createTransaction(request)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

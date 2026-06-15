@@ -1,0 +1,148 @@
+/* ============ COQUILLE ESPACE PRO ============ */
+.agent-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  min-height: 100vh;
+}
+
+@media (min-width: 768px) {
+  .agent-shell {
+    grid-template-columns: 260px 1fr;
+  }
+}
+
+/* ---- Sidebar ---- */
+.agent-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 24px 20px;
+  background: var(--bg-tint);
+  border-bottom: 1px solid var(--line);
+}
+
+@media (min-width: 768px) {
+  .agent-sidebar {
+    border-bottom: none;
+    border-right: 1px solid var(--line);
+    padding: 28px 20px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+}
+
+.agent-logo {
+  font-weight: 800;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+  color: var(--accent);
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+}
+
+.agent-logo .logo-dot {
+  color: var(--ink);
+}
+
+/* ---- Navigation ---- */
+.agent-nav {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+@media (min-width: 768px) {
+  .agent-nav {
+    flex-direction: column;
+    flex: 1 0 auto;
+  }
+}
+
+.agent-nav a {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--ink-soft);
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
+}
+
+.agent-nav a:hover {
+  background: var(--bg-soft);
+  color: var(--ink);
+}
+
+.agent-nav a.active {
+  background: var(--accent-tint);
+  color: var(--accent);
+}
+
+.agent-nav a .pi {
+  font-size: 15px;
+}
+
+/* ---- Pied de sidebar ---- */
+.agent-sidebar-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+@media (min-width: 768px) {
+  .agent-sidebar-footer {
+    margin-top: auto;
+  }
+}
+
+.agent-user-name {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.agent-user-role {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.agent-sidebar-footer .p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+.agent-back-link {
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: center;
+  transition: color 0.15s ease;
+}
+
+.agent-back-link:hover {
+  color: var(--accent);
+}
+
+/* ---- Contenu ---- */
+.agent-content {
+  padding: 24px 20px;
+}
+
+@media (min-width: 768px) {
+  .agent-content {
+    padding: 40px;
+  }
+}

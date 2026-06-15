@@ -1,0 +1,179 @@
+<app-header />
+
+<main>
+  <section class="estimate">
+    <div class="container">
+      <div class="section-eyebrow">Estimation gratuite</div>
+      <h1 class="section-title">Estimez votre bien en Provence</h1>
+      <p class="estimate-intro">
+        Renseignez les informations de votre bien et vos coordonnées : une agence de notre réseau
+        vous recontacte rapidement pour affiner votre estimation et vous accompagner, à votre
+        rythme, jusqu'à la vente.
+      </p>
+
+      @if (!submitted()) {
+        <form class="estimate-card" [formGroup]="form" (ngSubmit)="submit()">
+          <!-- Type de bien -->
+          <div class="field">
+            <label for="propertyType">Type de bien</label>
+            <p-select
+              inputId="propertyType"
+              [options]="propertyTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Sélectionnez un type"
+              formControlName="propertyType"
+            />
+            @if (propertyTypeError()) {
+              <span class="field-error">{{ propertyTypeError() }}</span>
+            }
+          </div>
+
+          <!-- Surface / Pièces -->
+          <div class="field-row">
+            <div class="field">
+              <label for="surface">Surface</label>
+              <p-inputnumber
+                inputId="surface"
+                formControlName="surface"
+                suffix=" m²"
+                [min]="1"
+                [showButtons]="false"
+              />
+              @if (surfaceError()) {
+                <span class="field-error">{{ surfaceError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="roomsCount">Nombre de pièces</label>
+              <p-inputnumber
+                inputId="roomsCount"
+                formControlName="roomsCount"
+                [min]="1"
+                [showButtons]="false"
+              />
+              @if (roomsCountError()) {
+                <span class="field-error">{{ roomsCountError() }}</span>
+              }
+            </div>
+          </div>
+
+          <!-- Adresse -->
+          <div class="field">
+            <label for="address">Adresse</label>
+            <input
+              id="address"
+              type="text"
+              pInputText
+              formControlName="address"
+              autocomplete="street-address"
+              placeholder="12 rue de la République"
+            />
+            @if (addressError()) {
+              <span class="field-error">{{ addressError() }}</span>
+            }
+          </div>
+
+          <!-- Ville / Code postal -->
+          <div class="field-row">
+            <div class="field">
+              <label for="city">Ville</label>
+              <input
+                id="city"
+                type="text"
+                pInputText
+                formControlName="city"
+                autocomplete="address-level2"
+                placeholder="Aix-en-Provence"
+              />
+              @if (cityError()) {
+                <span class="field-error">{{ cityError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="postalCode">Code postal</label>
+              <input
+                id="postalCode"
+                type="text"
+                pInputText
+                formControlName="postalCode"
+                autocomplete="postal-code"
+                placeholder="13100"
+              />
+              @if (postalCodeError()) {
+                <span class="field-error">{{ postalCodeError() }}</span>
+              }
+            </div>
+          </div>
+
+          <h2 class="estimate-subheading">Vos coordonnées</h2>
+
+          <!-- Nom complet -->
+          <div class="field">
+            <label for="fullName">Nom complet</label>
+            <input
+              id="fullName"
+              type="text"
+              pInputText
+              formControlName="fullName"
+              autocomplete="name"
+              placeholder="Jeanne Dupont"
+            />
+            @if (fullNameError()) {
+              <span class="field-error">{{ fullNameError() }}</span>
+            }
+          </div>
+
+          <!-- Email / Téléphone -->
+          <div class="field-row">
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                pInputText
+                formControlName="email"
+                autocomplete="email"
+                placeholder="vous@exemple.fr"
+              />
+              @if (emailError()) {
+                <span class="field-error">{{ emailError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="phone">Téléphone</label>
+              <input
+                id="phone"
+                type="tel"
+                pInputText
+                formControlName="phone"
+                autocomplete="tel"
+                placeholder="06 12 34 56 78"
+              />
+              @if (phoneError()) {
+                <span class="field-error">{{ phoneError() }}</span>
+              }
+            </div>
+          </div>
+
+          <p-button type="submit" label="Obtenir mon estimation" />
+        </form>
+      } @else {
+        <div class="estimate-card estimate-confirmation">
+          <i class="pi pi-check-circle"></i>
+          <h2>Demande envoyée</h2>
+          <p>
+            Votre demande d'estimation a bien été transmise. Une de nos agences vous recontactera
+            rapidement pour affiner l'estimation et vous accompagner dans la vente de votre bien.
+          </p>
+          <a routerLink="/" class="link-arrow">Retour à l'accueil</a>
+        </div>
+      }
+    </div>
+  </section>
+</main>
+
+<app-footer />

@@ -1,0 +1,52 @@
+<app-header />
+
+<main>
+  <section class="transactions-section">
+    <div class="container">
+      <h2 class="section-title">Mes démarches</h2>
+
+      <div class="transaction-list">
+        @switch (transactionsState().status) {
+          @case ('loading') {
+            <p class="transaction-empty">Chargement de vos démarches…</p>
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger vos démarches pour le moment. Vérifiez votre connexion et
+              réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (transactions().length === 0) {
+              <div class="grid-empty">Aucune démarche en cours.</div>
+            } @else {
+              @for (transaction of transactions(); track transaction.id) {
+                <article class="transaction-card">
+                  <div class="transaction-card-head">
+                    <a
+                      class="transaction-card-title"
+                      [routerLink]="['/properties', transaction.propertyId]"
+                    >
+                      {{ transaction.propertyTitle }}
+                    </a>
+                    <p-tag
+                      [value]="statusLabel(transaction.status)"
+                      [severity]="statusSeverity(transaction.status)"
+                    />
+                  </div>
+                  <p class="transaction-card-meta">
+                    {{ formatAmount(transaction.amount) }} ·
+                    {{ transaction.agentFullName ?? '—' }} ·
+                    {{ transaction.createdAt.slice(0, 10) }}
+                  </p>
+                </article>
+              }
+            }
+          }
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

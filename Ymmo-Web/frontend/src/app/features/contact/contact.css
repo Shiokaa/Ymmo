@@ -1,0 +1,87 @@
+/* Page de contact : présentation + coordonnées d'un côté, formulaire de l'autre */
+
+.contact-wrap {
+  display: grid;
+  gap: 40px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 900px) {
+  .contact-wrap {
+    grid-template-columns: 1fr 1.1fr;
+    gap: 80px;
+    align-items: start;
+  }
+}
+
+.contact-info .section-subtitle {
+  margin-bottom: 32px;
+}
+
+.contact-details {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.contact-details li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+
+.contact-details li a {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.contact-details i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--accent-tint);
+  color: var(--accent);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.contact-form-wrap {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 32px;
+}
+
+.contact-form-wrap .field textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.contact-success {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 0;
+}
+
+.contact-success .pi-check-circle {
+  font-size: 40px;
+  color: var(--accent);
+}
+
+.contact-success p {
+  color: var(--ink-soft);
+  font-size: 16px;
+  line-height: 1.55;
+  margin: 0;
+}

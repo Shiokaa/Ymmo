@@ -1,0 +1,31 @@
+/* Section de recherche : un peu d'air au-dessus de la barre de filtres et de la grille */
+.search-section {
+  padding: 48px 0 96px;
+}
+
+/* La barre de filtres reprend .search mais sans bouton de soumission :
+   4 champs égaux sur grand écran, forme arrondie classique plutôt que pilule. */
+.search-filters {
+  max-width: none;
+  margin: 32px 0 40px;
+  border-radius: var(--radius-lg);
+}
+
+@media (min-width: 720px) {
+  .search-filters {
+    grid-template-columns: repeat(4, 1fr);
+    border-radius: var(--radius-lg);
+  }
+
+  .search-filters .search-field:first-child,
+  .search-filters .search-field:last-child {
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* Bouton « Charger plus » centré sous la grille de résultats */
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}

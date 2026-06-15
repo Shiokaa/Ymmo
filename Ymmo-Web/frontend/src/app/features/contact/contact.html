@@ -1,0 +1,107 @@
+<app-header />
+
+<main>
+  <section class="contact-section">
+    <div class="container contact-wrap">
+      <!-- Colonne gauche : présentation + coordonnées -->
+      <div class="contact-info">
+        <span class="section-eyebrow">Contact</span>
+        <h1 class="section-title">Parlons de votre projet</h1>
+        <p class="section-subtitle">
+          Une question, un bien à vendre ou un projet d'achat ? Notre équipe vous répond
+          rapidement.
+        </p>
+
+        <ul class="contact-details">
+          <li>
+            <i class="pi pi-phone"></i>
+            <a href="tel:0442000000">04 42 00 00 00</a>
+          </li>
+          <li>
+            <i class="pi pi-envelope"></i>
+            <a href="mailto:contact@ymmo.fr">contact&#64;ymmo.fr</a>
+          </li>
+          <li>
+            <i class="pi pi-map-marker"></i>
+            <span>1 rue Espariat, 13100 Aix-en-Provence</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Colonne droite : formulaire ou confirmation -->
+      <div class="contact-form-wrap">
+        @if (!submitted()) {
+          <form [formGroup]="form" (ngSubmit)="submit()">
+            <div class="field">
+              <label for="fullName">Nom complet</label>
+              <input
+                id="fullName"
+                type="text"
+                pInputText
+                formControlName="fullName"
+                autocomplete="name"
+                placeholder="Jeanne Dupont"
+              />
+              @if (fullNameError()) {
+                <span class="field-error">{{ fullNameError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                pInputText
+                formControlName="email"
+                autocomplete="email"
+                placeholder="vous@exemple.fr"
+              />
+              @if (emailError()) {
+                <span class="field-error">{{ emailError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="subject">Sujet</label>
+              <input
+                id="subject"
+                type="text"
+                pInputText
+                formControlName="subject"
+                placeholder="Estimation d'un bien à Aix-en-Provence"
+              />
+              @if (subjectError()) {
+                <span class="field-error">{{ subjectError() }}</span>
+              }
+            </div>
+
+            <div class="field">
+              <label for="message">Message</label>
+              <textarea
+                id="message"
+                pTextarea
+                formControlName="message"
+                rows="5"
+                placeholder="Décrivez votre demande..."
+              ></textarea>
+              @if (messageError()) {
+                <span class="field-error">{{ messageError() }}</span>
+              }
+            </div>
+
+            <p-button type="submit" label="Envoyer le message" />
+          </form>
+        } @else {
+          <div class="contact-success">
+            <i class="pi pi-check-circle"></i>
+            <p>Votre message a bien été envoyé. Nous vous répondrons rapidement.</p>
+            <a routerLink="/" class="link-arrow">Retour à l'accueil</a>
+          </div>
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

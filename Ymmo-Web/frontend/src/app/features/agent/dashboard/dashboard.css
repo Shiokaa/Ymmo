@@ -1,0 +1,175 @@
+.agent-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.agent-page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.agent-page-message {
+  color: var(--ink-soft);
+}
+
+/* ---- Cartes chiffres ---- */
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.dashboard-card {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-card-skeleton {
+  height: 96px;
+  background: linear-gradient(90deg, var(--bg-tint) 25%, var(--line) 50%, var(--bg-tint) 75%);
+  background-size: 200% 100%;
+  animation: dashboard-skeleton-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes dashboard-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.dashboard-card-label {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+
+.dashboard-card-value {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.dashboard-card-sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--ink-soft);
+}
+
+/* ---- Sections (répartition par type / top villes) ---- */
+.dashboard-sections {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 900px) {
+  .dashboard-sections {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.dashboard-section {
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.dashboard-section h2 {
+  margin: 0 0 16px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+/* ---- Barres de répartition par type ---- */
+.dashboard-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.dashboard-bar-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+.dashboard-bar-label {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.dashboard-bar-count {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+.dashboard-bar-track {
+  height: 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-tint);
+  overflow: hidden;
+}
+
+.dashboard-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+/* ---- Top villes ---- */
+.dashboard-cities {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: city-rank;
+}
+
+.dashboard-city-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+
+.dashboard-city-row:last-child {
+  border-bottom: none;
+}
+
+.dashboard-city-name {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+.dashboard-city-count {
+  color: var(--accent-deep);
+  font-weight: 700;
+}

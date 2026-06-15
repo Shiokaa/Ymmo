@@ -1,0 +1,59 @@
+<app-header />
+
+<main class="auth">
+  <div class="auth-card">
+    <h1>Connexion</h1>
+    <p class="auth-subtitle">Accédez à votre espace Ymmo.</p>
+
+    @if (justRegistered) {
+      <div class="auth-success">Votre compte a été créé. Connectez-vous.</div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          autocomplete="email"
+          placeholder="vous@exemple.fr"
+        />
+        @if (emailError()) {
+          <span class="field-error">{{ emailError() }}</span>
+        }
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="current-password"
+          [inputStyle]="{ width: '100%' }"
+        />
+        @if (passwordError()) {
+          <span class="field-error">{{ passwordError() }}</span>
+        }
+      </div>
+
+      <!-- Erreur serveur -->
+      @if (serverError()) {
+        <div class="server-error">{{ serverError() }}</div>
+      }
+
+      <p-button type="submit" label="Se connecter" [loading]="loading()" />
+    </form>
+
+    <p class="auth-footer">
+      Pas encore de compte ? <a routerLink="/auth/register">S'inscrire</a>
+    </p>
+  </div>
+</main>
+
+<app-footer />

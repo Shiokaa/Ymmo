@@ -1,0 +1,186 @@
+<app-header />
+
+<main>
+  <!-- ============ HERO + RECHERCHE ============ -->
+  <section class="hero">
+    <div class="container hero-content">
+      <span class="hero-eyebrow">
+        <span class="pin">●</span>
+        {{ agencyCount() }} agences en Provence — Aix, Marseille &amp; environs
+      </span>
+      <h1>Trouvez le bien <em>qui vous ressemble</em>, en Provence.</h1>
+      <p class="hero-lead">
+        Maisons de village, appartements en centre-ville, bureaux, terrains constructibles. Notre
+        réseau local sélectionne chaque bien avec soin pour vous éviter les mauvaises surprises.
+      </p>
+
+      <!-- Barre de recherche -->
+      <form class="search" role="search" (submit)="$event.preventDefault(); submitSearch()">
+        <!-- Ville -->
+        <div class="search-field" [class.focused]="cityFieldFocused()">
+          <label for="search-city">Où</label>
+          <input
+            id="search-city"
+            type="text"
+            placeholder="Rechercher une ville"
+            autocomplete="off"
+            [ngModel]="searchCity()"
+            (ngModelChange)="searchCity.set($event)"
+            name="city"
+            (focus)="cityFieldFocused.set(true)"
+            (blur)="onCityBlur()"
+          />
+          @if (cityFieldFocused() && citySuggestions().length > 0) {
+            <div class="dropdown">
+              @for (city of citySuggestions(); track city) {
+                <button type="button" class="dropdown-item" (mousedown)="selectCity(city)">
+                  <span class="icon"><i class="pi pi-map-marker"></i></span>
+                  {{ city }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Type de bien -->
+        <div class="search-field">
+          <label for="search-type">Type de bien</label>
+          <p-select
+            inputId="search-type"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tous les biens"
+            [ngModel]="searchType()"
+            (ngModelChange)="searchType.set($event)"
+            name="type"
+          />
+        </div>
+
+        <div class="search-submit">
+          <p-button type="submit" label="Rechercher" icon="pi pi-search" [rounded]="true" />
+        </div>
+      </form>
+
+      <!-- Recherches fréquentes -->
+      <div class="hero-chips">
+        <span class="chips-label">Recherches fréquentes :</span>
+        @for (search of frequentSearches; track search) {
+          <button type="button" class="chip" (click)="searchFrequent(search)">{{ search }}</button>
+        }
+      </div>
+
+      <!-- Statistiques -->
+      <div class="hero-stats">
+        <div>
+          <div class="stat-num">{{ availableCountLabel() }}</div>
+          <div class="stat-label">biens disponibles</div>
+        </div>
+        <div>
+          <div class="stat-num">{{ agencyCount() }}</div>
+          <div class="stat-label">agences locales</div>
+        </div>
+        <div>
+          <div class="stat-num">38 ans</div>
+          <div class="stat-label">d'expertise en Provence</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BIENS MIS EN AVANT ============ -->
+  <section id="acheter">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <div class="section-eyebrow">[ 02 ] Sélection du moment</div>
+          <h2 class="section-title">Biens récents en Provence</h2>
+          <p class="section-subtitle">
+            Les nouveautés mises en ligne par nos {{ agencyCount() }} agences cette semaine.
+          </p>
+        </div>
+        <a class="link-arrow" routerLink="/search"
+          >Voir tous les biens <i class="pi pi-arrow-right"></i
+        ></a>
+      </div>
+
+      <div class="grid">
+        @switch (propertiesState().status) {
+          @case ('loading') {
+            @for (item of skeletonItems; track item) {
+              <article class="card" aria-hidden="true">
+                <div class="card-image">
+                  <p-skeleton width="100%" height="100%" borderRadius="0" />
+                </div>
+                <div class="card-body">
+                  <p-skeleton width="75%" height="18px" />
+                  <p-skeleton width="50%" height="14px" />
+                  <p-skeleton width="90%" height="14px" styleClass="mt-2" />
+                </div>
+              </article>
+            }
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger les biens pour le moment. Vérifiez votre connexion et réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (featuredProperties().length === 0) {
+              <div class="grid-empty">Aucun bien disponible pour le moment.</div>
+            } @else {
+              @for (property of featuredProperties(); track property.id) {
+                <app-property-card [property]="property" [index]="$index" />
+              }
+            }
+          }
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NOS AGENCES ============ -->
+  <section id="agences" class="agences">
+    <div class="container agences-wrap">
+      <div class="agences-text">
+        <div class="section-eyebrow">[ 03 ] Le réseau Ymmo</div>
+        <h2 class="section-title">{{ agencyCount() }} agences,<br />une seule équipe.</h2>
+        <p>
+          Du cœur d'Aix-en-Provence au Vieux-Port, en passant par les villages du Luberon, nos
+          conseillers connaissent leur quartier comme leur poche. Conseil personnalisé, visites
+          accompagnées, suivi notarial — on s'occupe de tout.
+        </p>
+        <div class="agences-cta">
+          <p-button label="Voir les agences" size="large" [rounded]="true" routerLink="/agencies" />
+          <a class="link-arrow" routerLink="/contact"
+            >Prendre rendez-vous <i class="pi pi-arrow-right"></i
+          ></a>
+        </div>
+      </div>
+
+      <!-- Carte stylisée du réseau (décorative) -->
+      <div class="map-panel" aria-hidden="true">
+        <div class="map-grid"></div>
+        @for (pin of mapPins; track $index) {
+          <div
+            class="map-pin"
+            [class.lg]="pin.lg"
+            [style.left.%]="pin.x"
+            [style.top.%]="pin.y"
+          ></div>
+          @if (pin.label) {
+            <div class="map-label" [style.left.%]="pin.x" [style.top.%]="pin.y">
+              {{ pin.label }}
+            </div>
+          }
+        }
+        <div class="map-badge">
+          <div class="num">{{ agencyCount() }}</div>
+          <div class="lbl">agences en Provence</div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

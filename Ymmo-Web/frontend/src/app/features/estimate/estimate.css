@@ -1,0 +1,78 @@
+/* Page d'estimation : formulaire centré sur fond teinté, cf. design system dans src/styles.css */
+
+.estimate {
+  background: var(--bg-tint);
+  padding: 64px 0;
+}
+
+.estimate-intro {
+  max-width: 640px;
+  margin: 16px 0 32px;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.estimate-card {
+  max-width: 640px;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 40px;
+}
+
+.estimate-subheading {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 8px 0 20px;
+}
+
+/* Champs sur une même ligne */
+.field-row {
+  display: flex;
+  gap: 16px;
+}
+
+.field-row .field {
+  flex: 1;
+}
+
+/* p-select / p-inputnumber : le wrapper PrimeNG doit prendre toute la largeur */
+.estimate-card .p-select,
+.estimate-card .p-inputnumber {
+  width: 100%;
+}
+
+.estimate-card .p-button {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ===== Panneau de confirmation ===== */
+.estimate-confirmation {
+  text-align: center;
+}
+
+.estimate-confirmation .pi-check-circle {
+  font-size: 48px;
+  color: var(--accent);
+  margin-bottom: 16px;
+  display: inline-block;
+}
+
+.estimate-confirmation h2 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 12px;
+}
+
+.estimate-confirmation p {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0 0 24px;
+}
+
+.estimate-confirmation .link-arrow {
+  justify-content: center;
+}

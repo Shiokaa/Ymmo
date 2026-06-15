@@ -1,0 +1,161 @@
+<app-header />
+
+<main>
+  <section>
+    <div class="container">
+      <div class="profile-header">
+        <h1 class="section-title">Mon compte</h1>
+        <p-button
+          label="Déconnexion"
+          icon="pi pi-sign-out"
+          severity="secondary"
+          [outlined]="true"
+          (onClick)="logout()"
+        />
+      </div>
+
+      <div class="profile-grid">
+        <!-- ============ INFORMATIONS PERSONNELLES ============ -->
+        <div class="auth-card">
+          <h2>Mes informations</h2>
+          <p class="auth-subtitle">Mettez à jour vos informations personnelles.</p>
+
+          <form [formGroup]="profileForm" (ngSubmit)="submitProfile()">
+            <!-- Prénom / Nom -->
+            <div class="field-row">
+              <div class="field">
+                <label for="firstName">Prénom</label>
+                <input
+                  id="firstName"
+                  type="text"
+                  pInputText
+                  formControlName="firstName"
+                  autocomplete="given-name"
+                />
+                @if (firstNameError()) {
+                  <span class="field-error">{{ firstNameError() }}</span>
+                }
+              </div>
+
+              <div class="field">
+                <label for="lastName">Nom</label>
+                <input
+                  id="lastName"
+                  type="text"
+                  pInputText
+                  formControlName="lastName"
+                  autocomplete="family-name"
+                />
+                @if (lastNameError()) {
+                  <span class="field-error">{{ lastNameError() }}</span>
+                }
+              </div>
+            </div>
+
+            <!-- Email -->
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                type="email"
+                pInputText
+                formControlName="email"
+                autocomplete="email"
+              />
+              @if (emailError()) {
+                <span class="field-error">{{ emailError() }}</span>
+              }
+            </div>
+
+            <!-- Téléphone -->
+            <div class="field">
+              <label for="phone">Téléphone</label>
+              <input id="phone" type="tel" pInputText formControlName="phone" autocomplete="tel" />
+              @if (phoneError()) {
+                <span class="field-error">{{ phoneError() }}</span>
+              }
+            </div>
+
+            <!-- Message -->
+            @if (profileMessage()?.type === 'success') {
+              <div class="auth-success">{{ profileMessage()?.text }}</div>
+            }
+            @if (profileMessage()?.type === 'error') {
+              <div class="server-error">{{ profileMessage()?.text }}</div>
+            }
+
+            <p-button type="submit" label="Enregistrer" [loading]="loadingProfile()" />
+          </form>
+        </div>
+
+        <!-- ============ MOT DE PASSE ============ -->
+        <div class="auth-card">
+          <h2>Changer le mot de passe</h2>
+          <p class="auth-subtitle">Choisissez un nouveau mot de passe.</p>
+
+          <form [formGroup]="passwordForm" (ngSubmit)="submitPassword()">
+            <!-- Mot de passe actuel -->
+            <div class="field">
+              <label for="oldPassword">Mot de passe actuel</label>
+              <p-password
+                inputId="oldPassword"
+                formControlName="oldPassword"
+                [feedback]="false"
+                [toggleMask]="true"
+                autocomplete="current-password"
+                [inputStyle]="{ width: '100%' }"
+              />
+              @if (oldPasswordError()) {
+                <span class="field-error">{{ oldPasswordError() }}</span>
+              }
+            </div>
+
+            <!-- Nouveau mot de passe -->
+            <div class="field">
+              <label for="newPassword">Nouveau mot de passe</label>
+              <p-password
+                inputId="newPassword"
+                formControlName="newPassword"
+                [feedback]="false"
+                [toggleMask]="true"
+                autocomplete="new-password"
+                [inputStyle]="{ width: '100%' }"
+              />
+              @if (newPasswordError()) {
+                <span class="field-error">{{ newPasswordError() }}</span>
+              }
+            </div>
+
+            <!-- Confirmation -->
+            <div class="field">
+              <label for="validPassword">Confirmer le nouveau mot de passe</label>
+              <p-password
+                inputId="validPassword"
+                formControlName="validPassword"
+                [feedback]="false"
+                [toggleMask]="true"
+                autocomplete="new-password"
+                [inputStyle]="{ width: '100%' }"
+              />
+              @if (validPasswordError()) {
+                <span class="field-error">{{ validPasswordError() }}</span>
+              }
+            </div>
+
+            <!-- Message -->
+            @if (passwordMessage()?.type === 'success') {
+              <div class="auth-success">{{ passwordMessage()?.text }}</div>
+            }
+            @if (passwordMessage()?.type === 'error') {
+              <div class="server-error">{{ passwordMessage()?.text }}</div>
+            }
+
+            <p-button type="submit" label="Mettre à jour" [loading]="loadingPassword()" />
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

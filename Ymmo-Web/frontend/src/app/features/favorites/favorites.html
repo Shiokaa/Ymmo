@@ -1,0 +1,56 @@
+<app-header />
+
+<main>
+  <section class="favorites-section">
+    <div class="container">
+      <div class="section-head">
+        <div>
+          <h2 class="section-title">Mes favoris</h2>
+          <p class="section-subtitle">
+            {{ favoriteProperties().length }} bien(s) sauvegardé(s)
+          </p>
+        </div>
+      </div>
+
+      <div class="grid">
+        @switch (propertiesState().status) {
+          @case ('loading') {
+            @for (item of skeletonItems; track item) {
+              <article class="card" aria-hidden="true">
+                <div class="card-image">
+                  <p-skeleton width="100%" height="100%" borderRadius="0" />
+                </div>
+                <div class="card-body">
+                  <p-skeleton width="75%" height="18px" />
+                  <p-skeleton width="50%" height="14px" />
+                  <p-skeleton width="90%" height="14px" styleClass="mt-2" />
+                </div>
+              </article>
+            }
+          }
+          @case ('error') {
+            <div class="grid-empty">
+              Impossible de charger vos favoris pour le moment. Vérifiez votre connexion et
+              réessayez.
+            </div>
+          }
+          @case ('ready') {
+            @if (favoriteProperties().length === 0) {
+              <div class="grid-empty">
+                Vous n'avez pas encore de favoris.
+                <br />
+                <a class="link-arrow" routerLink="/search">Parcourir les biens</a>
+              </div>
+            } @else {
+              @for (property of favoriteProperties(); track property.id) {
+                <app-property-card [property]="property" [index]="$index" />
+              }
+            }
+          }
+        }
+      </div>
+    </div>
+  </section>
+</main>
+
+<app-footer />

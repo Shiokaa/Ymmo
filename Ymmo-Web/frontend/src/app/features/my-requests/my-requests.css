@@ -1,0 +1,62 @@
+/* Section des demandes : un peu d'air au-dessus et en dessous de la liste */
+.requests-section {
+  padding: 48px 0 96px;
+}
+
+.request-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.request-empty {
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  background: var(--bg-soft);
+  border-radius: var(--radius-lg);
+}
+
+.request-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.request-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.request-card-title {
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.request-card-title:hover {
+  color: var(--accent);
+}
+
+.request-card-meta {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.request-card-message {
+  font-size: 14px;
+  color: var(--ink);
+  margin: 0;
+}

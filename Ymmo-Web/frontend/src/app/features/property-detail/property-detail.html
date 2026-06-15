@@ -1,0 +1,183 @@
+<app-header />
+
+<main>
+  <section>
+    <div class="container">
+      @switch (propertyState().status) {
+        @case ('loading') {
+          <div class="detail-gallery">
+            <p-skeleton width="100%" height="100%" borderRadius="var(--radius-lg)" />
+          </div>
+          <div class="detail-body">
+            <p-skeleton width="60%" height="32px" />
+            <p-skeleton width="30%" height="24px" styleClass="mt-3" />
+            <p-skeleton width="100%" height="16px" styleClass="mt-4" />
+            <p-skeleton width="100%" height="16px" styleClass="mt-2" />
+            <p-skeleton width="80%" height="16px" styleClass="mt-2" />
+          </div>
+        }
+        @case ('error') {
+          <div class="grid-empty">Bien introuvable.</div>
+          <p class="detail-back">
+            <a class="link-arrow" routerLink="/search"
+              ><i class="pi pi-arrow-left"></i> Retour à la recherche</a
+            >
+          </p>
+        }
+        @case ('ready') {
+          @if (property(); as property) {
+            <a class="link-arrow detail-back" routerLink="/search"
+              ><i class="pi pi-arrow-left"></i> Retour aux résultats</a
+            >
+
+            <!-- ============ GALERIE ============ -->
+            <div class="detail-gallery">
+              @if (displayedImageUrl(); as imageUrl) {
+                <img class="detail-gallery-main" [src]="imageUrl" [alt]="property.title" />
+              } @else {
+                <div class="detail-gallery-main ph" aria-hidden="true">
+                  <i class="pi pi-image"></i>
+                </div>
+              }
+            </div>
+
+            @if (property.propertyImages.length > 1) {
+              <div class="detail-thumbs">
+                @for (image of property.propertyImages; track image.id) {
+                  <button
+                    type="button"
+                    class="detail-thumb"
+                    [class.active]="displayedImageUrl() === image.imageUrl"
+                    (click)="selectImage(image.imageUrl)"
+                  >
+                    <img [src]="image.imageUrl" [alt]="image.description || property.title" />
+                  </button>
+                }
+              </div>
+            }
+
+            <!-- ============ INFOS PRINCIPALES ============ -->
+            <div class="detail-body">
+              <div class="detail-head">
+                <div>
+                  <p-tag [value]="typeLabel()" />
+                  <h1 class="detail-title">{{ property.title }}</h1>
+                  <p class="detail-location">
+                    <i class="pi pi-map-marker"></i>
+                    {{ property.address }}, {{ property.postalCode }} {{ property.city }}
+                  </p>
+                </div>
+                <div class="detail-price-block">
+                  <div class="detail-price">{{ formattedPrice() }}</div>
+                  <p-tag
+                    [value]="property.available ? 'Disponible' : 'Vendu'"
+                    [severity]="property.available ? 'success' : 'danger'"
+                  />
+                  <p-button
+                    [label]="isFavorite() ? 'Dans vos favoris' : 'Ajouter aux favoris'"
+                    [icon]="isFavorite() ? 'pi pi-heart-fill' : 'pi pi-heart'"
+                    [severity]="isFavorite() ? 'danger' : 'secondary'"
+                    [outlined]="!isFavorite()"
+                    (onClick)="toggleFavorite(property.id)"
+                  />
+                </div>
+              </div>
+
+              <!-- ============ CARACTÉRISTIQUES ============ -->
+              <div class="detail-features">
+                <div class="detail-feature">
+                  <i class="pi pi-arrows-h"></i>
+                  <span>{{ property.size }} m²</span>
+                </div>
+                @if (property.roomsCount > 0) {
+                  <div class="detail-feature">
+                    <i class="pi pi-th-large"></i>
+                    <span>{{ property.roomsCount }} pièces</span>
+                  </div>
+                }
+              </div>
+
+              <!-- ============ DESCRIPTION ============ -->
+              <div class="detail-description">
+                <h2 class="section-title">Description</h2>
+                <p>{{ property.description }}</p>
+              </div>
+
+              <!-- ============ AGENCE ============ -->
+              <div class="detail-agency">
+                <h2 class="section-title">Agence en charge</h2>
+                <div class="agency-card">
+                  <h3 class="agency-name">{{ property.agency.name }}</h3>
+                  <div class="agency-contacts">
+                    <a class="agency-contact" [href]="'tel:' + property.agency.phone">
+                      <i class="pi pi-phone"></i>
+                      {{ property.agency.phone }}
+                    </a>
+                    <a class="agency-contact" [href]="'mailto:' + property.agency.email">
+                      <i class="pi pi-envelope"></i>
+                      {{ property.agency.email }}
+                    </a>
+                  </div>
+                  <a class="link-arrow" [routerLink]="['/agencies', property.agency.id]">
+                    Voir l'agence <i class="pi pi-arrow-right"></i>
+                  </a>
+                </div>
+              </div>
+
+              <!-- ============ DEMANDE DE VISITE / INFORMATIONS ============ -->
+              <div class="detail-request">
+                <h2 class="section-title">Demander une visite ou des informations</h2>
+                @if (!isAuthenticated()) {
+                  <p class="request-message">
+                    <a routerLink="/auth/login">Connectez-vous</a> pour demander une visite.
+                  </p>
+                } @else if (requestSent()) {
+                  <p class="request-message">Votre demande a bien été envoyée.</p>
+                } @else {
+                  <form [formGroup]="requestForm" (ngSubmit)="submitRequest(property.id)">
+                    <div class="field">
+                      <label for="requestType">Type de demande</label>
+                      <p-select
+                        inputId="requestType"
+                        [options]="requestTypeOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        formControlName="type"
+                      />
+                    </div>
+
+                    <div class="field">
+                      <label for="requestMessage">Message</label>
+                      <textarea
+                        id="requestMessage"
+                        pTextarea
+                        formControlName="message"
+                        rows="4"
+                        placeholder="Décrivez votre demande..."
+                      ></textarea>
+                      @if (requestMessageError()) {
+                        <span class="field-error">{{ requestMessageError() }}</span>
+                      }
+                    </div>
+
+                    @if (requestError()) {
+                      <div class="server-error">{{ requestError() }}</div>
+                    }
+
+                    <p-button
+                      type="submit"
+                      label="Envoyer la demande"
+                      [loading]="requestSending()"
+                    />
+                  </form>
+                }
+              </div>
+            </div>
+          }
+        }
+      }
+    </div>
+  </section>
+</main>
+
+<app-footer />

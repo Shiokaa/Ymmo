@@ -1,0 +1,212 @@
+:host {
+  display: block;
+}
+
+.detail-back {
+  display: inline-flex;
+  margin-bottom: 24px;
+}
+
+/* ============ GALERIE ============ */
+.detail-gallery {
+  aspect-ratio: 16 / 9;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  background: var(--bg-soft);
+  margin-bottom: 16px;
+}
+
+.detail-gallery-main {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-gallery-main.ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(34, 34, 34, 0.25);
+  font-size: 40px;
+  background: repeating-linear-gradient(
+    135deg,
+    rgba(34, 34, 34, 0.04) 0 12px,
+    rgba(34, 34, 34, 0.07) 12px 24px
+  );
+}
+
+.detail-thumbs {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 32px;
+  overflow-x: auto;
+}
+
+.detail-thumb {
+  flex-shrink: 0;
+  width: 96px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  padding: 0;
+  border: 2px solid transparent;
+  background: var(--bg-soft);
+  transition: border-color 0.15s ease;
+}
+
+.detail-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.detail-thumb.active {
+  border-color: var(--accent);
+}
+
+/* ============ CORPS ============ */
+.detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 720px;
+}
+
+.detail-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.detail-title {
+  font-size: clamp(24px, 4vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  font-weight: 700;
+  margin: 12px 0 8px;
+  color: var(--ink);
+}
+
+.detail-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.detail-location .pi {
+  color: var(--accent);
+}
+
+.detail-price-block {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.detail-price {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* ============ CARACTÉRISTIQUES ============ */
+.detail-features {
+  display: flex;
+  gap: 24px;
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.detail-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--ink);
+}
+
+.detail-feature .pi {
+  color: var(--accent);
+}
+
+/* ============ DESCRIPTION ============ */
+.detail-description p {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  white-space: pre-line;
+  margin: 16px 0 0;
+}
+
+/* ============ AGENCE ============ */
+.agency-card {
+  margin-top: 16px;
+  max-width: 360px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agency-name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.agency-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.agency-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.agency-contact:hover {
+  color: var(--accent);
+}
+
+.agency-contact .pi {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+/* ============ DEMANDE DE VISITE / INFORMATIONS ============ */
+.detail-request form {
+  margin-top: 16px;
+  max-width: 360px;
+}
+
+.request-message {
+  margin-top: 16px;
+  font-size: 15px;
+  color: var(--ink-soft);
+}
+
+.request-message a {
+  color: var(--accent);
+  font-weight: 600;
+}

@@ -1,0 +1,253 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <div>
+      <a routerLink="/agent/properties" class="back-link">← Mes biens</a>
+      <h1>{{ isEditMode() ? 'Modifier le bien' : 'Ajouter un bien' }}</h1>
+    </div>
+  </header>
+
+  <div class="form-card">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Agence -->
+      <div class="field">
+        <label for="agencyId">Agence</label>
+        <p-select
+          inputId="agencyId"
+          [options]="agencies() ?? []"
+          optionLabel="name"
+          optionValue="id"
+          placeholder="Sélectionnez une agence"
+          formControlName="agencyId"
+          [loading]="agencies() === null"
+        />
+        @if (agencyIdError()) {
+          <span class="field-error">{{ agencyIdError() }}</span>
+        }
+      </div>
+
+      <!-- Titre -->
+      <div class="field">
+        <label for="title">Titre</label>
+        <input
+          id="title"
+          type="text"
+          pInputText
+          formControlName="title"
+          placeholder="Maison de village avec jardin"
+        />
+        @if (titleError()) {
+          <span class="field-error">{{ titleError() }}</span>
+        }
+      </div>
+
+      <!-- Description -->
+      <div class="field">
+        <label for="description">Description</label>
+        <textarea
+          id="description"
+          pTextarea
+          rows="4"
+          formControlName="description"
+          placeholder="Décrivez le bien : pièces, prestations, environnement..."
+        ></textarea>
+        @if (descriptionError()) {
+          <span class="field-error">{{ descriptionError() }}</span>
+        }
+      </div>
+
+      <!-- Type de bien -->
+      <div class="field">
+        <label for="type">Type de bien</label>
+        <p-select
+          inputId="type"
+          [options]="propertyTypeOptions"
+          optionLabel="label"
+          optionValue="value"
+          placeholder="Sélectionnez un type"
+          formControlName="type"
+        />
+        @if (typeError()) {
+          <span class="field-error">{{ typeError() }}</span>
+        }
+      </div>
+
+      <!-- Adresse -->
+      <div class="field">
+        <label for="address">Adresse</label>
+        <input
+          id="address"
+          type="text"
+          pInputText
+          formControlName="address"
+          autocomplete="street-address"
+          placeholder="12 rue de la République"
+        />
+        @if (addressError()) {
+          <span class="field-error">{{ addressError() }}</span>
+        }
+      </div>
+
+      <!-- Ville / Code postal -->
+      <div class="field-row">
+        <div class="field">
+          <label for="city">Ville</label>
+          <input
+            id="city"
+            type="text"
+            pInputText
+            formControlName="city"
+            autocomplete="address-level2"
+            placeholder="Aix-en-Provence"
+          />
+          @if (cityError()) {
+            <span class="field-error">{{ cityError() }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="postalCode">Code postal</label>
+          <input
+            id="postalCode"
+            type="text"
+            pInputText
+            formControlName="postalCode"
+            autocomplete="postal-code"
+            placeholder="13100"
+          />
+          @if (postalCodeError()) {
+            <span class="field-error">{{ postalCodeError() }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Prix / Surface / Pièces -->
+      <div class="field-row">
+        <div class="field">
+          <label for="price">Prix</label>
+          <p-inputnumber
+            inputId="price"
+            formControlName="price"
+            mode="currency"
+            currency="EUR"
+            locale="fr-FR"
+            [min]="0"
+            [showButtons]="false"
+          />
+          @if (priceError()) {
+            <span class="field-error">{{ priceError() }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="size">Surface</label>
+          <p-inputnumber
+            inputId="size"
+            formControlName="size"
+            suffix=" m²"
+            [min]="1"
+            [showButtons]="false"
+          />
+          @if (sizeError()) {
+            <span class="field-error">{{ sizeError() }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="roomsCount">Nombre de pièces</label>
+          <p-inputnumber
+            inputId="roomsCount"
+            formControlName="roomsCount"
+            [min]="1"
+            [showButtons]="false"
+          />
+          @if (roomsCountError()) {
+            <span class="field-error">{{ roomsCountError() }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Disponibilité -->
+      <div class="field field-checkbox">
+        <p-checkbox formControlName="available" [binary]="true" inputId="available" />
+        <label for="available">Disponible à la vente</label>
+      </div>
+
+      <!-- Messages -->
+      @if (serverError()) {
+        <div class="server-error">{{ serverError() }}</div>
+      }
+      @if (successMessage()) {
+        <div class="success-message">{{ successMessage() }}</div>
+      }
+
+      <p-button
+        type="submit"
+        [label]="isEditMode() ? 'Enregistrer les modifications' : 'Créer le bien'"
+        [loading]="saving()"
+      />
+    </form>
+  </div>
+
+  <!-- Photos -->
+  <div class="form-card">
+    <h2>Photos</h2>
+
+    @if (propertyId() === null) {
+      <p class="form-card-message">Enregistrez d'abord le bien pour ajouter des photos.</p>
+    } @else {
+      @if (images().length > 0) {
+        <div class="image-grid">
+          @for (image of images(); track image.id) {
+            <div class="image-item">
+              <img [src]="image.imageUrl" [alt]="image.description" />
+              @if (image.isCover) {
+                <p-tag value="Couverture" severity="success" class="image-cover-badge" />
+              }
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [outlined]="true"
+                size="small"
+                (onClick)="removeImage(image)"
+              />
+            </div>
+          }
+        </div>
+      } @else {
+        <p class="form-card-message">Aucune photo pour le moment.</p>
+      }
+
+      <h3>Ajouter une photo</h3>
+      <form class="upload-form" [formGroup]="imageForm" (ngSubmit)="addImage()">
+        <div class="field">
+          <label for="image-file">Fichier</label>
+          <input id="image-file" type="file" accept="image/*" (change)="onFileSelected($event)" />
+        </div>
+
+        <div class="field">
+          <label for="image-description">Description</label>
+          <input
+            id="image-description"
+            type="text"
+            pInputText
+            formControlName="description"
+            placeholder="Vue depuis le salon"
+          />
+        </div>
+
+        <div class="field field-checkbox">
+          <p-checkbox formControlName="isCover" [binary]="true" inputId="image-is-cover" />
+          <label for="image-is-cover">Image de couverture</label>
+        </div>
+
+        <p-button
+          type="submit"
+          label="Ajouter la photo"
+          icon="pi pi-upload"
+          [loading]="uploading()"
+          [disabled]="!uploadFile()"
+        />
+      </form>
+    }
+  </div>
+</div>

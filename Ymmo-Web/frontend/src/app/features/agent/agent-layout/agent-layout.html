@@ -1,0 +1,54 @@
+<div class="agent-shell">
+  <aside class="agent-sidebar">
+    <a routerLink="/" class="agent-logo">Ymmo<span class="logo-dot">.</span></a>
+
+    <nav class="agent-nav">
+      <a routerLink="/agent/dashboard" routerLinkActive="active">
+        <i class="pi pi-chart-bar"></i>
+        <span>Tableau de bord</span>
+      </a>
+      <a routerLink="/agent/properties" routerLinkActive="active">
+        <i class="pi pi-building"></i>
+        <span>Mes biens</span>
+      </a>
+      <a routerLink="/agent/requests" routerLinkActive="active">
+        <i class="pi pi-inbox"></i>
+        <span>Demandes</span>
+      </a>
+      <a routerLink="/agent/transactions" routerLinkActive="active">
+        <i class="pi pi-briefcase"></i>
+        <span>Transactions</span>
+      </a>
+      @if (currentUser()?.role === 'ADMIN') {
+        <a routerLink="/agent/users" routerLinkActive="active">
+          <i class="pi pi-users"></i>
+          <span>Utilisateurs</span>
+        </a>
+      }
+    </nav>
+
+    <div class="agent-sidebar-footer">
+      @if (currentUser(); as user) {
+        <div class="agent-user">
+          <p class="agent-user-name">{{ user.firstName }}</p>
+          <p class="agent-user-role">{{ user.role }}</p>
+        </div>
+      }
+
+      <p-button
+        label="Déconnexion"
+        icon="pi pi-sign-out"
+        severity="secondary"
+        [outlined]="true"
+        size="small"
+        (onClick)="logout()"
+      />
+
+      <a routerLink="/" class="agent-back-link">← Retour au site</a>
+    </div>
+  </aside>
+
+  <main class="agent-content">
+    <router-outlet />
+  </main>
+</div>

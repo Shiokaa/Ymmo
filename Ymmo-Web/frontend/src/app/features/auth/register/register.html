@@ -1,0 +1,118 @@
+<app-header />
+
+<main class="auth">
+  <div class="auth-card">
+    <h1>Inscription</h1>
+    <p class="auth-subtitle">Créez votre compte Ymmo en quelques secondes.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <!-- Prénom / Nom -->
+      <div class="field-row">
+        <div class="field">
+          <label for="firstName">Prénom</label>
+          <input
+            id="firstName"
+            type="text"
+            pInputText
+            formControlName="firstName"
+            autocomplete="given-name"
+            placeholder="Jeanne"
+          />
+          @if (firstNameError()) {
+            <span class="field-error">{{ firstNameError() }}</span>
+          }
+        </div>
+
+        <div class="field">
+          <label for="lastName">Nom</label>
+          <input
+            id="lastName"
+            type="text"
+            pInputText
+            formControlName="lastName"
+            autocomplete="family-name"
+            placeholder="Dupont"
+          />
+          @if (lastNameError()) {
+            <span class="field-error">{{ lastNameError() }}</span>
+          }
+        </div>
+      </div>
+
+      <!-- Email -->
+      <div class="field">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          autocomplete="email"
+          placeholder="vous@exemple.fr"
+        />
+        @if (emailError()) {
+          <span class="field-error">{{ emailError() }}</span>
+        }
+      </div>
+
+      <!-- Téléphone -->
+      <div class="field">
+        <label for="phone">Téléphone</label>
+        <input
+          id="phone"
+          type="tel"
+          pInputText
+          formControlName="phone"
+          autocomplete="tel"
+          placeholder="06 12 34 56 78"
+        />
+        @if (phoneError()) {
+          <span class="field-error">{{ phoneError() }}</span>
+        }
+      </div>
+
+      <!-- Mot de passe -->
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="new-password"
+          [inputStyle]="{ width: '100%' }"
+        />
+        @if (passwordError()) {
+          <span class="field-error">{{ passwordError() }}</span>
+        }
+      </div>
+
+      <!-- Confirmation mot de passe -->
+      <div class="field">
+        <label for="confirmPassword">Confirmer le mot de passe</label>
+        <p-password
+          inputId="confirmPassword"
+          formControlName="confirmPassword"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="new-password"
+          [inputStyle]="{ width: '100%' }"
+        />
+        @if (confirmPasswordError()) {
+          <span class="field-error">{{ confirmPasswordError() }}</span>
+        }
+      </div>
+
+      <!-- Erreur serveur -->
+      @if (serverError()) {
+        <div class="server-error">{{ serverError() }}</div>
+      }
+
+      <p-button type="submit" label="S'inscrire" [loading]="loading()" />
+    </form>
+
+    <p class="auth-footer">Déjà un compte ? <a routerLink="/auth/login">Se connecter</a></p>
+  </div>
+</main>
+
+<app-footer />

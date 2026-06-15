@@ -1,0 +1,71 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <h1>Utilisateurs</h1>
+  </header>
+
+  @if (loadError()) {
+    <p class="agent-page-message">
+      Impossible de charger les utilisateurs. Merci de réessayer plus tard.
+    </p>
+  } @else if (users() === null) {
+    <p-table [value]="[]" [loading]="true">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>Rôle</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body"></ng-template>
+    </p-table>
+  } @else if (users()!.length === 0) {
+    <div class="agent-page-message">
+      <p>Aucun utilisateur.</p>
+    </div>
+  } @else {
+    <p-table [value]="users()!">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nom</th>
+          <th>Email</th>
+          <th>Téléphone</th>
+          <th>Rôle</th>
+          <th>Date</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-user>
+        <tr>
+          <td>{{ user.firstName }} {{ user.lastName }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.phone }}</td>
+          <td>
+            <p-tag [value]="roleLabel(user.role)" [severity]="roleSeverity(user.role)" />
+          </td>
+          <td>{{ user.createdAt }}</td>
+          <td class="agent-table-actions">
+            <p-select
+              [options]="roleOptions"
+              optionLabel="label"
+              optionValue="value"
+              [ngModel]="user.role"
+              (ngModelChange)="changeRole(user, $event)"
+              [appendTo]="'body'"
+            />
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [outlined]="true"
+              size="small"
+              [disabled]="user.id === currentUserId()"
+              (onClick)="deleteUser(user)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+</div>

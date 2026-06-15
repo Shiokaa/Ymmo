@@ -1,0 +1,83 @@
+<div class="agent-page">
+  <header class="agent-page-header">
+    <h1>Tableau de bord</h1>
+  </header>
+
+  @switch (state().status) {
+    @case ('loading') {
+      <div class="dashboard-cards">
+        @for (item of skeletonCards; track item) {
+          <div class="dashboard-card dashboard-card-skeleton"></div>
+        }
+      </div>
+      <p class="agent-page-message">Chargement des statistiques…</p>
+    }
+    @case ('error') {
+      <p class="agent-page-message">
+        Impossible de charger les statistiques. Merci de réessayer plus tard.
+      </p>
+    }
+    @case ('ready') {
+      @if (stats(); as stats) {
+        <div class="dashboard-cards">
+          <div class="dashboard-card">
+            <p class="dashboard-card-label">Biens</p>
+            <p class="dashboard-card-value">{{ formatNumber(stats.totalProperties) }}</p>
+            <p class="dashboard-card-sub">{{ formatNumber(stats.availableProperties) }} disponibles</p>
+          </div>
+          <div class="dashboard-card">
+            <p class="dashboard-card-label">Agences</p>
+            <p class="dashboard-card-value">{{ formatNumber(stats.totalAgencies) }}</p>
+          </div>
+          <div class="dashboard-card">
+            <p class="dashboard-card-label">Utilisateurs</p>
+            <p class="dashboard-card-value">{{ formatNumber(stats.totalUsers) }}</p>
+          </div>
+          <div class="dashboard-card">
+            <p class="dashboard-card-label">Prix moyen</p>
+            <p class="dashboard-card-value">{{ formatPrice(stats.averagePrice) }}</p>
+          </div>
+        </div>
+
+        <div class="dashboard-sections">
+          <section class="dashboard-section">
+            <h2>Répartition par type</h2>
+            @if (typeRows().length === 0) {
+              <p class="agent-page-message">Aucune donnée disponible.</p>
+            } @else {
+              <ul class="dashboard-bars">
+                @for (row of typeRows(); track row.label) {
+                  <li class="dashboard-bar-row">
+                    <div class="dashboard-bar-header">
+                      <span class="dashboard-bar-label">{{ row.label }}</span>
+                      <span class="dashboard-bar-count">{{ formatNumber(row.count) }}</span>
+                    </div>
+                    <div class="dashboard-bar-track">
+                      <div class="dashboard-bar-fill" [style.width.%]="row.percent"></div>
+                    </div>
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          <section class="dashboard-section">
+            <h2>Top villes</h2>
+            @if (topCities().length === 0) {
+              <p class="agent-page-message">Aucune donnée disponible.</p>
+            } @else {
+              <ol class="dashboard-cities">
+                @for (row of topCities(); track row.city) {
+                  <li class="dashboard-city-row">
+                    <span class="dashboard-city-name">{{ row.city }}</span>
+                    <span class="dashboard-city-count">{{ formatNumber(row.count) }}</span>
+                  </li>
+                }
+              </ol>
+            }
+          </section>
+        </div>
+      }
+    }
+  }
+</div>

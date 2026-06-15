@@ -1,0 +1,10 @@
+/* Les styles de la page (hero, grille, agences) sont globaux : design system dans src/styles.css. */
+
+/* Le suggestion-item est un <button> : on neutralise son style natif */
+.dropdown-item {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+}

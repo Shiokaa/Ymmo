@@ -1,0 +1,107 @@
+/* ---- Card d'agence ---- */
+.agency-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.agency-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.agency-mono {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.02em;
+}
+
+.agency-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.agency-name {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0;
+}
+
+.agency-location {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+.agency-location .pi {
+  margin-top: 2px;
+  color: var(--accent);
+}
+
+.agency-description {
+  font-size: 14px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
+
+.agency-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.agency-contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.agency-contact:hover {
+  color: var(--accent);
+}
+
+.agency-contact .pi {
+  color: var(--accent);
+  font-size: 13px;
+}
+
+/* Bouton « Charger plus » centré sous la grille d'agences */
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 32px;
+}
