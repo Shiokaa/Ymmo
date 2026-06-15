@@ -6,7 +6,7 @@ VM Debian 12 servant de jump host SSH pour atteindre les VMs internes depuis le 
 
 ## Rôle dans l'infrastructure
 
-Le bastion est le seul hôte accessible directement depuis le control node sur le réseau de gestion Proxmox (`192.168.10.0/24`). Son IP LAN Proxmox est `192.168.10.43`.
+Le bastion est le seul hôte accessible directement depuis le control node sur le réseau de gestion Proxmox (`192.168.10.0/24`). Son IP LAN Proxmox est `<IP-bastion>`.
 
 Les VMs internes (VLAN 10 siège `10.0.10.x`, VLAN 20 `10.0.20.x`, etc.) ne sont pas routables depuis le control node. Ansible les atteint via un `ProxyJump` SSH à travers le bastion. Le bastion participe au backbone WireGuard (`10.254.0.2/32`) ce qui lui donne accès aux VLANs siège via OPNsense.
 
@@ -16,7 +16,7 @@ Control node
        |
        | SSH direct (vmbr0)
        v
-  Bastion — 192.168.10.43
+  Bastion — <IP-bastion>
     WireGuard : 10.254.0.2/32
        |
        | WireGuard backbone 10.254.0.0/24
@@ -38,7 +38,7 @@ Le bastion **ne route pas** les réseaux agences (`10.1.0.0/16`, `10.2.0.0/16`, 
 
 | Interface | Adresse | Réseau |
 |-----------|---------|--------|
-| `ens18` (vmbr0) | `192.168.10.43` | Réseau de gestion Proxmox — accès direct depuis le control node |
+| `ens18` (vmbr0) | `<IP-bastion>` | Réseau de gestion Proxmox — accès direct depuis le control node |
 | `wg0` | `10.254.0.2/32` | Backbone WireGuard — communication chiffrée avec OPNsense |
 
 Le bastion n'a pas d'interface sur les VLANs internes. Il accède à `10.0.x.x` en envoyant le trafic dans le tunnel WireGuard vers OPNsense, qui le route ensuite sur le bon VLAN.
@@ -121,12 +121,12 @@ DNS        = 10.0.10.254   # optionnel selon la configuration du rôle
 [Peer]
 # Hub OPNsense
 PublicKey    = <clé publique OPNsense — transmise via hostvars>
-Endpoint     = 192.168.10.40:51820
+Endpoint     = <IP-WAN-OPNsense>:51820
 AllowedIPs   = 10.0.0.0/16
 PersistentKeepalive = 25
 ```
 
-La clé publique OPNsense est transmise depuis le play 1 via `hostvars[groups['tag_router'][0]]['wg_server_pubkey']`. L'endpoint est l'IP WAN d'OPNsense : `192.168.10.40`.
+La clé publique OPNsense est transmise depuis le play 1 via `hostvars[groups['tag_router'][0]]['wg_server_pubkey']`. L'endpoint est l'IP WAN d'OPNsense : `<IP-WAN-OPNsense>`.
 
 ---
 
@@ -158,7 +158,7 @@ ansible-playbook -i inventory/ playbooks/wireguard.yml --ask-vault-pass \
   --limit Bastion \
   --tags config,service \
   -e "wg_server_pubkey=<clé publique OPNsense>" \
-  -e "opnsense_wan_ip=192.168.10.40"
+  -e "opnsense_wan_ip=<IP-WAN-OPNsense>"
 ```
 
 ---
@@ -167,7 +167,7 @@ ansible-playbook -i inventory/ playbooks/wireguard.yml --ask-vault-pass \
 
 ### Comment fonctionne le ProxyJump
 
-Ansible ouvre d'abord une connexion SSH vers le bastion (`192.168.10.43`), puis établit une seconde connexion SSH vers la VM cible (`10.0.x.x`) à travers ce premier tunnel. Du point de vue de la VM cible, la connexion provient du bastion.
+Ansible ouvre d'abord une connexion SSH vers le bastion (`<IP-bastion>`), puis établit une seconde connexion SSH vers la VM cible (`10.0.x.x`) à travers ce premier tunnel. Du point de vue de la VM cible, la connexion provient du bastion.
 
 Le tunnel WireGuard du bastion doit être actif pour que la VM cible soit joignable. Sans tunnel, `10.0.x.x` est inaccessible depuis le bastion.
 
@@ -219,19 +219,19 @@ Les options utilisées :
 
 ```bash
 # Connexion directe au bastion
-ssh sysadmin@192.168.10.43
+ssh sysadmin@<IP-bastion>
 
 # Connexion à une VM interne via le bastion (ProxyJump explicite)
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1
 
 # Vérifier l'état du tunnel WireGuard depuis le bastion
-ssh sysadmin@192.168.10.43 "sudo wg show"
+ssh sysadmin@<IP-bastion> "sudo wg show"
 
 # Tester la connectivité vers OPNsense via le tunnel
-ssh sysadmin@192.168.10.43 "ping -c 3 10.254.0.1"
+ssh sysadmin@<IP-bastion> "ping -c 3 10.254.0.1"
 
 # Tester l'accès à un VLAN interne
-ssh sysadmin@192.168.10.43 "ping -c 3 10.0.10.1"
+ssh sysadmin@<IP-bastion> "ping -c 3 10.0.10.1"
 ```
 
 ---
@@ -254,7 +254,7 @@ ssh sysadmin@192.168.10.43 "ping -c 3 10.0.10.1"
 | Point | Détail |
 |-------|--------|
 | Ordre d'exécution | Le bastion doit être configuré via `wireguard.yml` (orchestrateur complet) lors du premier setup. Le playbook `debian_wireguard.yml` seul suppose que les clés OPNsense sont connues — il échouera au play de configuration. |
-| Tunnel WireGuard obligatoire | Tant que `wg-quick@wg0` n'est pas actif sur le bastion, les VMs internes (`10.0.x.x`) sont injoignables. Vérifier l'état du service avant tout diagnostic réseau : `ssh sysadmin@192.168.10.43 "sudo systemctl status wg-quick@wg0"`. |
+| Tunnel WireGuard obligatoire | Tant que `wg-quick@wg0` n'est pas actif sur le bastion, les VMs internes (`10.0.x.x`) sont injoignables. Vérifier l'état du service avant tout diagnostic réseau : `ssh sysadmin@<IP-bastion> "sudo systemctl status wg-quick@wg0"`. |
 | Dépendance à l'inventaire Proxmox | `hostvars[groups['tag_bastion'][0]]['ansible_host']` dans `ansible_ssh_common_args` est résolu dynamiquement par le plugin d'inventaire. Si le bastion est absent de l'inventaire (VM arrêtée, tag manquant), les playbooks ciblant les groupes internes échoueront avec une erreur d'index. |
 | Tag Proxmox | Le bastion porte les tags `bastion` et `ymmotom`. L'inventaire dynamique le regroupe sous `tag_bastion`. Le tag `ymmotom` est requis pour qu'il apparaisse dans l'inventaire (filtre configuré dans `inventory/proxmox.proxmox.yml`). |
 | Rotation des clés | Pour régénérer la keypair WireGuard du bastion, supprimer `/etc/wireguard/wg0.key` sur la VM, puis relancer `wireguard.yml`. Le play 3 met à jour le peer côté OPNsense avec la nouvelle clé publique. |

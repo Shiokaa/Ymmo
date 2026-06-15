@@ -12,12 +12,12 @@ Control node (Ansible)
        |
        | SSH direct (vmbr0 / réseau Proxmox)
        v
-  Bastion — 192.168.10.43 (vmbr0)
+  Bastion — <IP-bastion> (vmbr0)
     WireGuard tunnel : 10.254.0.2/32
        |
        | UDP 51820 — backbone 10.254.0.0/24
        v
-  OPNsense — WAN 192.168.10.40 (Hub WireGuard)
+  OPNsense — WAN <IP-WAN-OPNsense> (Hub WireGuard)
     Tunnel : 10.254.0.1/24
        |
        |--- Bastion      10.254.0.2   AllowedIPs : 10.254.0.2/32
@@ -150,7 +150,7 @@ Exposée au rôle via `group_vars/tag_router/main.yml` sous le nom `wireguard_se
 
 ## Prérequis
 
-1. OPNsense configuré et accessible sur `192.168.10.40` — les playbooks de setup doivent avoir été exécutés :
+1. OPNsense configuré et accessible sur `<IP-WAN-OPNsense>` — les playbooks de setup doivent avoir été exécutés :
    ```bash
    ansible-playbook -i ansible/inventory/ ansible/playbooks/opnsense_setup.yml --ask-vault-pass
    ansible-playbook -i ansible/inventory/ ansible/playbooks/opnsense_network.yml --ask-vault-pass
@@ -215,7 +215,7 @@ ansible -i inventory/ tag_router -m uri \
 ssh sysadmin@<IP vmbr0> "sudo wg show"
 
 # Ping backbone depuis le bastion
-ssh sysadmin@192.168.10.43 "ping -c 3 10.254.0.1"
+ssh sysadmin@<IP-bastion> "ping -c 3 10.254.0.1"
 ```
 
 ---

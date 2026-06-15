@@ -54,6 +54,7 @@ Adresses fixes dans le VLAN SRV (10) :
 | IP | Machine | Rôle |
 |---|---|---|
 | `10.0.10.1` | Samba4-DC1 | Contrôleur de domaine Active Directory |
+| `10.0.10.2` | Webapp | Site web Ymmo (stack Docker Compose) |
 | `10.0.10.254` | OPNsense (interface VLAN 10) | Passerelle du VLAN SRV |
 
 ### 2.3 Agences — Sites 1 à 12 (`10.N.0.0/16`)
@@ -96,18 +97,23 @@ OPNsense-Master est connecté aux deux bridges. Les autres VMs internes n'ont qu
 
 ### Phase 1 — Packer : construction des templates
 
-Deux templates sont construits et stockés comme templates Proxmox :
+Trois templates sont construits et stockés comme templates Proxmox :
 
 **Template Debian 12 (ID 9000)**
 - Fichier : `packer/debian-12.pkr.hcl`
 - Installation automatisée via `packer/http/preseed.cfg`
 - 4 scripts de provisioning : mise à jour → durcissement → cloud-init → nettoyage
-- Utilisé par : Bastion, Samba4-DC1, Agence-01, Agence-02
+- Utilisé par : Bastion, Samba4-DC1, Webapp, Agence-01, Agence-02
 
 **Template OPNsense (ID 9001)**
 - Fichier : `packer/opnsense.pkr.hcl`
 - Basé sur FreeBSD, un seul script de setup, pas de preseed
 - Utilisé par : OPNsense-Master
+
+**Template Windows 11 25H2 (ID 9002)**
+- Fichier : `packer/windows-11.pkr.hcl`
+- Installation sans surveillance via `autounattend.iso`, WinRM sur HTTPS
+- Utilisé par : postes clients (CLI01-Siege)
 
 ### Phase 2 — Terraform : provisionnement des VMs
 
@@ -123,10 +129,18 @@ Le bloc `locals.sites` est la référence unique de la topologie. Il définit po
 - `OPNsense-Master` : 2 vCPU, 4 Go RAM, interfaces WAN + LAN, clone template 9001
 - `Bastion` : 1 vCPU, 512 Mo RAM, interface WAN uniquement, Cloud-init avec clé SSH
 - `Samba4-DC1` : 2 vCPU, 4 Go RAM, VLAN 10, IP statique `10.0.10.1/24`, Cloud-init
+- `Webapp` : 2 vCPU, 4 Go RAM, disque 40 Go, VLAN 10, IP statique `10.0.10.2/24`, Cloud-init — héberge le site Ymmo (Docker Compose)
 
 `zone-agences.tf` — VMs agences (une VM Debian par agence, endpoint WireGuard) :
 - `Agence-01` : 1 vCPU, 1 Go RAM, interface WAN, Cloud-init avec clé SSH
 - `Agence-02` : idem, site_id 2
+
+`zone-clients.tf` — postes clients Windows (déployés en 2e phase, IP en DHCP) :
+- `CLI01-Siege` : clone template 9002, VLAN 20, jonction au domaine AD via Ansible
+
+Toutes les VMs et tous les templates sont rangés dans le **pool Proxmox `ymmo-pool`**
+(argument `pool_id`). Ce pool doit préexister : le token API peut y rattacher des
+membres (`Pool.Allocate`) mais pas le créer ; voir le README pour la création.
 
 **Injection Cloud-init :**
 
@@ -143,14 +157,18 @@ Groupes utilisés dans les playbooks :
 | `tag_router` | `router` | OPNsense-Master |
 | `tag_bastion` | `bastion` | Bastion |
 | `tag_samba4` | `samba4` | Samba4-DC1 |
+| `tag_webapp` | `webapp` | Webapp |
 | `tag_agence` | `agence` | Agence-01, Agence-02 |
+| `tag_client` | `client` | CLI01-Siege (poste Windows) |
 
 **Playbooks, dans l'ordre d'exécution recommandé :**
 
 1. `opnsense_setup.yml` — bootstrap OPNsense : accès API, configuration de base
-2. `opnsense_network.yml` — VLANs, DHCP Dnsmasq, règles firewall
+2. `opnsense_network.yml` — VLANs, DHCP Dnsmasq, règles firewall (dont accès Webapp)
 3. `wireguard.yml` — génération des clés, configuration des peers, activation des tunnels
 4. `samba4.yml` — installation et provisionnement du contrôleur de domaine AD
+5. `webapp.yml` — déploiement du site Ymmo (rôle `docker_webapp`, stack Docker Compose)
+6. `windows_client.yml` — jonction des postes Windows au domaine AD
 
 OPNsense est configuré exclusivement via l'API HTTP (collection `oxlorg.opnsense` 25.7.8). Les playbooks OPNsense utilisent `gather_facts: false` — OPNsense tourne sur FreeBSD sans Python.
 
@@ -186,7 +204,7 @@ WireGuard est intégré nativement dans OPNsense. Ses avantages dans ce contexte
 
 ### Bastion comme point d'entrée Ansible
 
-Le Bastion (`192.168.10.43`) est la seule VM accessible directement depuis le réseau de contrôle. Il dispose d'une interface WireGuard (`10.254.0.2`) qui lui donne accès aux VLANs internes via le tunnel. Cela évite d'exposer l'ensemble de l'infrastructure sur le WAN.
+Le Bastion (`<IP-bastion>`) est la seule VM accessible directement depuis le réseau de contrôle. Il dispose d'une interface WireGuard (`10.254.0.2`) qui lui donne accès aux VLANs internes via le tunnel. Cela évite d'exposer l'ensemble de l'infrastructure sur le WAN.
 
 ### Cloud-init pour la configuration initiale des VMs
 
@@ -206,7 +224,8 @@ Un module unique gère la création de toutes les VMs : clone depuis template, i
 | Bastion | 1 instance | 1 instance |
 | Samba4 AD DC | 1 DC (DC1) | 2 DC (réplication) |
 | Agences | 2 (Agence-01, Agence-02) | Jusqu'à 12 |
-| Stack applicative Ymmo | Non déployée via ce pipeline | Docker Compose sur VM dédiée VLAN 10 |
+| Stack applicative Ymmo | Déployée (VM Webapp, VLAN 10, Docker Compose) | + reverse-proxy / TLS / scaling |
+| Postes clients Windows | 1 (CLI01-Siege) | Parc complet par site |
 
 ---
 

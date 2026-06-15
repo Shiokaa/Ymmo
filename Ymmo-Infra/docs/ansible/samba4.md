@@ -22,12 +22,12 @@ OPNsense est configuré avec une règle NAT outbound hybrid baked dans le templa
 
 ```bash
 # Depuis la VM (via ProxyJump) — doit retourner une réponse HTTP 200
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 "curl -s -o /dev/null -w '%{http_code}' http://deb.debian.org"
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 "curl -s -o /dev/null -w '%{http_code}' http://deb.debian.org"
 ```
 
 ### 2. Connectivité SSH : ProxyJump via le Bastion
 
-La VM `10.0.10.1` est sur le VLAN SRV_SIEGE, inaccessible directement depuis le control node. Ansible y accède via ProxyJump à travers le bastion (`192.168.10.43`), comme défini dans `group_vars/tag_samba4/main.yml` :
+La VM `10.0.10.1` est sur le VLAN SRV_SIEGE, inaccessible directement depuis le control node. Ansible y accède via ProxyJump à travers le bastion (`<IP-bastion>`), comme défini dans `group_vars/tag_samba4/main.yml` :
 
 ```yaml
 ansible_ssh_common_args: >-
@@ -40,7 +40,7 @@ ansible_ssh_common_args: >-
 Le tunnel WireGuard du bastion doit être actif. Vérifier avant tout :
 
 ```bash
-ssh sysadmin@192.168.10.43 "sudo wg show"
+ssh sysadmin@<IP-bastion> "sudo wg show"
 # La sortie doit afficher le peer OPNsense avec un "latest handshake" récent
 ```
 
@@ -243,7 +243,7 @@ VLAN 10 — SRV_SIEGE (10.0.10.0/24)
   |--- 10.0.10.254  OPNsense    (passerelle + DNS forwarder + NAT outbound)
 
 Accès depuis le control node :
-  Control node -> Bastion (192.168.10.43) -> wg0 -> OPNsense -> VLAN 10 -> 10.0.10.1
+  Control node -> Bastion (<IP-bastion>) -> wg0 -> OPNsense -> VLAN 10 -> 10.0.10.1
 ```
 
 Le DNS interne de Samba (`SAMBA_INTERNAL`) écoute sur `127.0.0.1:53`. Les requêtes que Samba ne peut pas résoudre (noms externes) sont forwardées vers OPNsense (`10.0.10.254`), qui utilise Unbound pour la résolution externe.
@@ -304,9 +304,9 @@ OPNsense n'est pas joignable ou la règle NAT outbound est absente.
 
 ```bash
 # Vérifier la passerelle depuis la VM
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 "ping -c 3 10.0.10.254"
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 "ping -c 3 10.0.10.254"
 # Vérifier internet
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 "curl -v http://deb.debian.org"
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 "curl -v http://deb.debian.org"
 ```
 
 **Le provisionnement échoue avec "Domain already exists"**
@@ -314,7 +314,7 @@ ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 "curl -v http://deb.debian.org"
 `sam.ldb` est présent mais le domaine est dans un état incohérent. Supprimer les données Samba et relancer :
 
 ```bash
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 \
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 \
   "sudo rm -rf /var/lib/samba/private/ /etc/samba/smb.conf"
 ansible-playbook ansible/playbooks/samba4.yml --ask-vault-pass --tags provision
 ```
@@ -324,7 +324,7 @@ ansible-playbook ansible/playbooks/samba4.yml --ask-vault-pass --tags provision
 Consulter les logs systemd :
 
 ```bash
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 "sudo journalctl -u samba-ad-dc -n 50"
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 "sudo journalctl -u samba-ad-dc -n 50"
 ```
 
 Cause fréquente : `smbd` ou `winbind` non masqués (vérifier avec `systemctl status smbd`), ou hostname non résolu (`/etc/hosts` mal configuré).
@@ -334,7 +334,7 @@ Cause fréquente : `smbd` ou `winbind` non masqués (vérifier avec `systemctl s
 Vérifier que `systemd-resolved` est bien masqué et que `/etc/resolv.conf` pointe sur `127.0.0.1` :
 
 ```bash
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 \
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 \
   "sudo systemctl status systemd-resolved && cat /etc/resolv.conf"
 ```
 
@@ -343,7 +343,7 @@ ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 \
 Vérifier que `/etc/krb5.conf` contient le realm `YMMO.LAN` et l'adresse `dc1.ymmo.lan`. Le re-copier si nécessaire :
 
 ```bash
-ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 \
+ssh -J sysadmin@<IP-bastion> sysadmin@10.0.10.1 \
   "sudo cp /var/lib/samba/private/krb5.conf /etc/krb5.conf"
 ```
 
@@ -351,8 +351,8 @@ ssh -J sysadmin@192.168.10.43 sysadmin@10.0.10.1 \
 
 Vérifier dans l'ordre :
 1. La VM est démarrée (Proxmox UI)
-2. Le tunnel WireGuard du bastion est actif : `ssh sysadmin@192.168.10.43 "sudo wg show"`
-3. Le bastion peut pinguer la VM : `ssh sysadmin@192.168.10.43 "ping -c 3 10.0.10.1"`
+2. Le tunnel WireGuard du bastion est actif : `ssh sysadmin@<IP-bastion> "sudo wg show"`
+3. Le bastion peut pinguer la VM : `ssh sysadmin@<IP-bastion> "ping -c 3 10.0.10.1"`
 4. L'inventaire dynamique détecte la VM : `ansible-inventory -i ansible/inventory/ --list | grep samba`
 
 ---
